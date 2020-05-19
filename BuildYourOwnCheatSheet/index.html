@@ -17,22 +17,73 @@
             </nav>
         </header>
         <main class="main">
-            <div class="overall-info">
+            <div class="overview">
                 <h2>Purpose</h2>
                 <p>This is my personal cheatsheet for some beginner topics in HTML and CSS. Feel free to use the navigation bar at the top of the website!</p>
             </div>
             <div class="doc-setup">
-                <h2>Basic HTML Doc Setup</h2>
+                <h2>HTML Doc Setup</h2>
                 <p>This will be an outline of the basic document setup for starting an HTML Document. This will cover the DOCTYPE, html, head, body, header, main and footer tags that are apart of css and make the general skeleton of a html document.</p>
                 <p>Element names are surrounded by angled brackets.</p>
+                <article class="semantics">
+                    <h3>Semantics</h3>
+                    <ul>
+                        <li>A key goal to focus on when creating your html document is to be as semantic as possible. That means we want to use the correct tags that will accurately describe the content that is being used inside the tags. An example would be using a header tag to wrap around a navbar tag. This will help our user understand the outline of the document. Most users will not be using the "inspect" feature on browsers, but the ones that do will be able to get a sense of what the document is supposed to look like.</li>
+                        <li>Semantics are key because they help search engines use keywords in order to find your website.</li>
+                        <li>They help screenreaders navigate a page for visually impaired users.</li>
+                        <li>It is easier for a developer that is going through your code to see an article and understand why an article tag is there, instead of a div tag that gives no semantic meaning besides it being a block-level element.</li>
+                    </ul>
+                </article>
                 <article>
-                    <h2>Semantics</h2>
-                    <p>A key goal to focus on when creating your html document is to be as semantic as possible. That means we want to use the correct tags that will accurately describe the content that is being used inside the tags. An example would be using a header tag to wrap around a navbar tag. This will help our user understand the outline of the document. Most users will not be using the "inspect" feature on browsers, but the ones that do will be able to get a sense of what the document is supposed to look like. *insert info about users that have to listen to a website*</p>
+                    <h3>HTML Doc Tags Explained</h3>
+                    <ul>
+                        <li>&lt;DOCTYPE&gt;: A required tag. Requried tag in order for the document to behave correctly.</li>
+                        <li>&lt;html&gt;: Known as the root element. Wraps all the content on the entire page.</li>
+                        <li>&lt;head&gt;: Acts as the container for all the content that will not be displayed visually on your html document. This includes things like keywords, links to stylesheets, page descriptions for search results.</li>
+                        <li>&lt;body&gt;: This contains all the content that you want the user to see when they visit your page. Most of your html writing will be inside a body tag.</li>
+                        <li>&lt;header&gt;: Represents introductory content, typically consists of a logo and a navigation bar.</li>
+                        <li>&lt;main&gt;: The dominant content of the &lt;body&gt; tag. Consists of content that is directly related to or expands upon the central topic of a document.</li>
+                        <li>&lt;footer&gt;: Contains information about the author of the content, links to related documents or copyright information.</li>
+                    </ul>
                 </article>
             </div>
             <div class="html-tables">
                 <h2>HTML Tables</h2>
-                <p>Tables can make organization on an HTML doc a breeze once mastered. Learning how to style </p>
+                <p>Tables can make organization on an HTML doc a breeze once mastered. Remembering the general structure of a table can make creating tables from scratch a breeze.</p>
+                <article>
+                    <h3>General Structure</h3>
+                    <ul>
+                        <li>The general structure of a table is to initialize the table with the &lt;table&gt; tag. This will wrap around your future table elements.</li>
+                        <li>The MDN doc recommends the rest of the order:</li>
+                        <li>
+                            <ol>
+                                <li>An optional &lt;caption&gt;.</li>
+                                <li>zero or more &lt;colgroup&gt; elements.</li>
+                                <li>an optional &lt;thead&gt; element.</li>
+                                <li>either one of the following: 
+                                    <ul>
+                                        <li>zero or more &lt;tbody&gt; elements.</li>
+                                        <li>one or more &lt;tr&gt; elements.</li>
+                                    </ul>
+                                </li>
+                                <li> an optional &lt;tfoot&gt; element.</li>
+                            </ol>
+                        </li>
+                    </ul>
+                </article>
+                <article>
+                    <h3>Table Tags Explained</h3>
+                    <ul>
+                        <li>&lt;table&gt; signify the creation of a table in HTML. This will wrap around all the elements in the user's table.</li>
+                        <li>&lt;caption&gt;: Considered optional, the value of &lt;caption&gt; will seek to describe the table's purpose, and help the user decide if they need to read the rest of the content in the table or skip over it.</li>
+                        <li>&lt;colgroup&gt;: Useful for applying styles to entire columns, instead of repeating the styles for each cell, for each row. Must be a child of a table element, after any caption elements, and before any thead, tbody, tfoot, and tr elements. To define different properties to a column within a colgroup, use the col tag within the colgroup tag.</li>
+                        <li>&lt;thead&gt;: Creates a row that will illustrate what will become of the columns. </li>
+                        <li>&lt;tbody&gt;: Encapsulates a set of table rows(&lt;tr&gt; elements), indicating to the user that this is the body of the table.</li>
+                        <li>&lt;tr&gt;: Defines a row of cells in a table. These cells can be established using a mix of &lt;td&gt; (data cells) and &lt;th&gt; (header cell) elements.</li>
+                        <li>&lt;tfoot&gt;: Defines a set of rows summarizing the columns of the table.</li>
+                    </ul>
+                </article>
+                <a href='https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table' target="_blank"> HTML Tables</a>
             </div>
             <div class="css-selectors">
                 <h2>CSS Selectors & Specificity</h2>
