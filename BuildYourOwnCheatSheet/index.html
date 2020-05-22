@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Build Your Own Cheat Sheet</title>
-        <link href="./styles" rel="stylesheet" type="text/css"/>
+        <link href="styles.css" rel="stylesheet" type="text/css"/>
     </head>
     <body>
         <header class="header">
@@ -13,10 +13,10 @@
                     <li><a href="#css-selectors">CSS Selectors & Specificity</a></li>
                     <li><a href="#basic-css">Basic CSS Styles & Properties</a></li>
                 </ul>
-                <h1 class="webpage-title">Justin Duong's Personal Cheat Sheet</h1>
             </nav>
         </header>
         <main class="main">
+            <h1 class="title">Justin Duong's Personal Cheat Sheet</h1>
             <div class="overview">
                 <h2>Purpose</h2>
                 <p>This is my personal cheatsheet for some beginner topics in HTML and CSS. Feel free to use the navigation bar at the top of the website!</p>
@@ -34,7 +34,7 @@
                         <li>It is easier for a developer that is going through your code to see an article and understand why an article tag is there, instead of a div tag that gives no semantic meaning besides it being a block-level element.</li>
                     </ul>
                 </article>
-                <article>
+                <article class="doc-tags">
                     <h3>HTML Doc Tags Explained</h3>
                     <ul>
                         <li>&lt;DOCTYPE&gt;: A required tag. Requried tag in order for the document to behave correctly.</li>
@@ -71,7 +71,7 @@
                         </li>
                     </ul>
                 </article>
-                <article>
+                <article class="table-tags">
                     <h3>Table Tags Explained</h3>
                     <ul>
                         <li>&lt;table&gt; signify the creation of a table in HTML. This will wrap around all the elements in the user's table.</li>
@@ -88,14 +88,94 @@
             <div class="css-selectors">
                 <h2>CSS Selectors & Specificity</h2>
                 <p>Let's understand more about CSS Selectors & Specificity. Let us take a look at classes and ids and understand when to use each one.</p>
+                <p>In order for our HTML documents to have cool colors and cool backgrounds, we have to add CSS to our document. Cascading Style Sheets, abbreviated CSS, gives our doc the oomph that makes the user enjoy the page they are looking at. If proper HTML gives the user a clear understanding of what the document is, then proper CSS styles the page so the user does not get bored AND can properly read the webpage. Imagine, green font with a white background. Eww.</p>
+                <p>To start with CSS, there are basic properties that will be explained later on. First, we need to understand how to apply the properties to the page. The first important topic that needs to be discussed is CSS selectors & specificity. Let's say we want to make the headline of our webpage a certain color. We need to understand how to select just that headline, that h1 tag, and make it the color blue without anything else changing to the color blue. That is where css selectors and specificity comes into play.</p>
             </div>
+            <article>
+                <h3>Types of Selectors</h3>
+                <ul>
+                    <li>Universal Selector: Selects all elements.</li>
+                        <ul>
+                            <li>Syntax: * {}</li>
+                        </ul>
+                    <li>Type Selectors: Selects all elements that have the given tag name.</li>
+                        <ul>
+                            <li>Syntax: elementname</li>
+                            <li>Example: h1 will match any h1 element in the document.</li>
+                        </ul>
+                    <li>Class selectors: Selects all classes with the given name. Must have a . before the name of the selector.</li>
+                        <ul>
+                            <li>Syntax: .classname</li>
+                            <li>Example: .headline will select all elements that have the class headline.</li>
+                        </ul>
+                    <li>ID selectors: Selects the element with the ID name. Only one element can have that specific ID name. This is known to be the most specific way to target an element when using CSS.</li>
+                        <ul>
+                            <li>Syntax: #idname</li>
+                            <li>Example: #hello will match the element with an id name of hello.</li>
+                        </ul>
+                    <li>Attribute Selectors: Selects all elements with the given attribute.</li>
+                        <ul>
+                            <li>Syntax: [attr]</li>
+                            <li>Example: [autoplay] will match all elements that have the autoplay attribute set (to any value).</li>
+                        </ul>
+                </ul>
+            </article>
+            <article>
+                <h3>Combinators</h3>
+                <p>Combinators are ways for the developer to target a certain element that is nested inside an element.</p>
+                <ul>
+                    <li>Descendant combinator: The space will select nodes that are descendents of the first element.</li>
+                        <ul>
+                            <li>Syntax: A B {}</li>
+                            <li>Example:A B will match all &lt;A&gt; elements that are nested inside a &lt;B&gt; element.</li>
+                        </ul>
+                    <li>Child combinator: The > will select nodes that are direct children of the first element.</li>
+                        <ul>
+                            <li>Syntax: A > B {}</li>
+                            <li>Example: ul > li will match all &lt;li&gt; elements inside a &lt;ul&gt; element.</li>
+                        </ul>
+                    <li>General sibling combinator: The ~ combinator selects siblings. This means that the second element will follow the first and that they both share the same parent selector.</li>
+                        <ul>
+                            <li>Syntax: A ~ B {}</li>
+                            <li>Example: p ~ span will match all &lt;span&gt; elements that follow a &lt;p&gt; element, immediately or as long as they share the same parent element.</li>
+                        </ul>
+                    <li>Adjacent sibling combinator: The + will select adjacent siblings. This means that the second element directly follows the first, and both share the same parent.</li>
+                        <ul>
+                            <li>Syntax: A + B {}</li>
+                            <li>Example: h2 + p will match all &lt;p&gt; elements that DIRECTLY follow an &lt;h2&gt; element.</li>
+                        </ul>
+                    <li>Column combinator: The || combinator will select nodes which belong to a column. Used in tables.</li>
+                        <ul>
+                            <li>Syntax: A || B {}</li>
+                            <li>col || td will match all &lt;td&gt; elements that belong to the scope of &lt;col&gt;</li>
+                        </ul>
+                </ul>
+                <p>Note: Understanding CSS selectors and the use of combinators will allow you to be consise and precise with selecting which element you want to specifically target for CSS.</p>
+            </article>
+            <article>
+                <h3>Understanding Specificity</h3>
+                <p>Specificity is based on the matching rules that are composed of different types of CSS selectors. As stated earlier, ID is the most specific you can get. If you use an ID tag on an element, and then style it, it will overide any other CSS selector, such as a class selector on the same element. Similarily, class selectors will overide any type selector. There is an exception, !important, which when placed on a property, will override any other declaration.</p>
+            </article>
             <div class="basic-css">
                 <h2>Basic CSS & Properties</h2>
                 <p>What are some basic CSS & properties that we should remember? How do we setup basic css and properties.</p>
             </div>
+            <article class="common-css">
+                <h3>Basic CSS Tags Explained</h3>
+                <p>Here I will add some basic CSS properties that any beginner will know and use. This is just filler information.</p>
+                <ul>
+                    <li>Color: This will adjust the font color. Note that you can choose color based on the name (black). There are other ways --> explain later.</li>
+                    <li>Height & Width: Adjusts the height and width of the element relevant to the parent element. If there is no parent element, then the parent element is the HTML doc itself (window?)</li>
+                    <li>Margin: Deals with the margin of the element selected. Margin being the space around the element on the outside. </li>
+                    <li>Padding: Padding is the space inside the element.</li>
+                    <li>Background-color: Sets the background color.</li>
+                    <li>Font-size: Sets the font size. lol.</li>
+                </ul>
+                <p>Note: These are just some of the CSS properties that popped into my head while filling out. How can we make a more extensive list??</p>
+            </article>
         </main>
         <footer class="footer">
-            <p>Justin Duong</p>
+            <p>Hey it me, Justin Duong</p>
         </footer>
     </body>
 </html>

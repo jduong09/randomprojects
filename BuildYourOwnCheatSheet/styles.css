@@ -1,4 +1,5 @@
-/* remove bullets and browser default settings */
+/* Navbar CSS: remove bullets and browser default settings */
+
 .navbar {
   list-style-type: none;
   margin: 0;
@@ -22,3 +23,10 @@
   background-color: teal;
 }
 
+/* Title and Overview */
+.title {
+  color: teal;
+  font-size: 32px;
+  border: 2px solid black;
+  font-family: Helvetica;
+}
