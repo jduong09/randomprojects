@@ -1,0 +1,51 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+nav {
+  background: black;
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+}
+ul {
+  list-style-type: none;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+li {
+  display: inline;
+  color: white;
+  padding: 10px;
+  border: 1px solid white;
+}
+
+.about {
+  order: 0;
+}
+
+.moves {
+  order: 1;
+}
+
+.logo {
+  order: 2;
+  color: blue;
+}
+
+.alternate-costumes {
+  order: 3;
+}
+
+.pro-gameplay {
+  order: 4;
+}
