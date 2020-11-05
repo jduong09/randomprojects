@@ -16,7 +16,7 @@ class Board
     @board[row][column]
   end
 
-  def start_game
+  def play_game
     puts "Welcome to Tic-tac-toe"
     puts "What is player 1's name?"
     player_1 = gets.chomp
@@ -35,7 +35,10 @@ class Board
       current_turn = turn % 2
       current_player = @players[current_turn]
       self.take_turn(current_player)
-      return "Game over!" if self.game_over?
+      if self.game_over?
+        self.display_board
+        return "Game Over!"
+      end
       self.display_board
     end
     puts "It's a tie!"
@@ -122,7 +125,12 @@ class Board
   end
 
   def take_turn(player)
-    coordinates = player.move 
+    coordinates = player.move
+    # need to check if  the move has already been played. Check if the value at that cell is "". if it is, then go ahead and make the move. if it isn't, then the move has been done. 
+    while spot_taken?(coordinates) == false
+      puts "This spot has been taken on the board; Please choose again:"
+      coordinates = player.move
+    end
     row = coordinates[0]
     col = coordinates[1]
     self[row, col].change_value(player.marker)
@@ -139,5 +147,12 @@ class Board
       string += row_string
     end
     puts string
+  end
+
+  def spot_taken?(move)
+    if self[move[0], move[1]].value != "-"
+      return false
+    end
+    true
   end
 end
