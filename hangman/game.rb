@@ -1,17 +1,8 @@
 # hangman
-
-# rules: 
-# game runs the welcome to hangman, list rules, how to win. then picks a word and displays from the dictionary.
-# check if game is over, if not, then run turn.
-# prompt the player to choose a letter
-# check if letter is apart of the word. if it is, place it in the appropriate spot
-  # if not, then increment the a counter that keeps track of how many turns the player has left.
-# run line 6 again
-# 
+# run ruby play_hangman.rb in your terminal.
+# MUST HAVE RUBY.
 
 class Game
-  # need to load the 5desk.txt in order to get all the words that are available to be chosen for the game
-  # randomly choose word to be the word for the game
   def initialize
     words = File.readlines("5desk.txt").map(&:chomp)
     @word = words.sample.downcase
@@ -92,11 +83,3 @@ class Game
     false
   end
 end
-
-# it works (kind of)! 
-# what needs to be added
-# a file that will run the game
-# if they guess the character correctly and the word has more than one of those characters, the letter needs to be added to those spots
-# if they guess a dupe of the letter (add the dupes to the terminal so they don't lol), return that it was a dupe, and play round again, not decrementing the lives, and not adding the letter.
-# can we use less methods? 
-# add tests (this should be added first, for TDD, but i don't understand TDD right now.)
