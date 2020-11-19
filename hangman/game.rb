@@ -1,9 +1,13 @@
 # hangman
-# run ruby play_hangman.rb in your terminal.
-# MUST HAVE RUBY.
+
+# Now implement the functionality where, at the start of any turn, instead of making a guess the player should also have the option to save the game. Remember what you learned about serializing objects… you can serialize your game class too!
+# When the program first loads, add in an option that allows you to open one of your saved games, which should jump you exactly back to where you were when you saved. Play on!
+
+require "json"
 
 class Game
   def initialize
+    @name = ""
     words = File.readlines("5desk.txt").map(&:chomp)
     @word = words.sample.downcase
     @remaining_lives = 6
@@ -24,15 +28,17 @@ class Game
     puts @attempted_guesses.join(" ")
     letter = gets.chomp
     self.check_match(letter)
+    puts "Your current string is: "
+    puts @string.join(" ")
   end
 
   def check_match(letter)
-    if @letters.include?(letter)
+    if @attempted_guesses.include?(letter)
+      puts "Duplicate letter; choose again"
+    elsif @letters.include?(letter)
       puts "You have guessed correctly!"
       self.update_board(letter)
       @attempted_guesses << letter
-    elsif @attempted_guesses.include?(letter)
-      puts "Duplicate letter; choose again"
     else
       puts "You have guessed incorrectly!"
       @remaining_lives -= 1
@@ -56,8 +62,6 @@ class Game
     indices.each do |idx|
       @string[idx] = letter
     end
-    puts "Your current string is: "
-    puts @string.join(" ")
   end
 
   def win?
@@ -81,5 +85,39 @@ class Game
       return true
     end
     false
+  end
+
+  def save_game
+    Dir.mkdir("saved_games") unless Dir.exists? "saved_games"
+    
+    puts "Enter a save name:"
+    @name = gets.chomp
+    filename = "saved_games/#{@name}"
+
+    File.open(filename,'w') do |file|
+      file.puts self.serialize
+    end
+  end
+
+  def load_game(name)
+    file = File.new("./saved_games/#{name}", 'r')
+    serialized_object = file.gets
+    self.unserialize(serialized_object)
+  end
+
+  def serialize
+    obj = {}
+    instance_variables.map do |var|
+      obj[var] = instance_variable_get(var)
+    end
+
+    JSON.dump obj
+  end
+
+  def unserialize(string)
+    obj = JSON.load(string)
+    obj.each do |key, values|
+      instance_variable_set(key, values)
+    end
   end
 end
