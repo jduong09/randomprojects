@@ -16,6 +16,27 @@ class Game
     @attempted_guesses = []
   end
 
+  def game_loop
+
+    puts "Do you have a saved game? Type (1) for yes and (2) for no."
+    response = gets.chomp
+
+    if response == "1"
+      puts "Name of saved game?"
+      filename = gets.chomp
+      self.load_game(filename)
+    end
+
+    self.start
+
+    until self.game_over?
+      self.take_turn
+      puts "\n"
+    end
+
+    return nil
+  end
+
   def start
     puts "Welcome to Hangman, developed by Justin Duong."
     puts "Your word has #{@word.length} letters."
@@ -23,6 +44,7 @@ class Game
   end
 
   def take_turn
+    puts "If you want to save your game, type (save)"
     puts "You have #{@remaining_lives} lives."
     puts "Player, please choose a letter."
     puts @attempted_guesses.join(" ")
@@ -33,7 +55,11 @@ class Game
   end
 
   def check_match(letter)
-    if @attempted_guesses.include?(letter)
+    if letter == "save"
+      puts "You have chosen to save."
+      self.save_game
+    elsif
+      @attempted_guesses.include?(letter)
       puts "Duplicate letter; choose again"
     elsif @letters.include?(letter)
       puts "You have guessed correctly!"
@@ -97,6 +123,8 @@ class Game
     File.open(filename,'w') do |file|
       file.puts self.serialize
     end
+
+    exit
   end
 
   def load_game(name)
