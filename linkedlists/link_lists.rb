@@ -14,22 +14,24 @@ class Linklist
   end
 
   def append(value)
+    new_node = Node.new(value)
     if @head.nil?
-      @head = value
-      @tail = value
+      @head = new_node
+      @tail = new_node
     else
-      @tail.next = value
-      @tail = value
+      @tail.next = new_node
+      @tail = new_node
     end
   end
 
   def prepend(value)
+    new_node = Node.new(value)
     if @head.nil?
-      @head = value
-      @tail = value
+      @head = new_node
+      @tail = new_node
     else
-      value.next = @head
-      @head = value
+      new_node.next = @head
+      @head = new_node
     end
   end
 
@@ -95,7 +97,7 @@ class Linklist
     index = 0
     self.each do |node| 
       index += 1
-      if value.data == value
+      if node.data == value
         return index
       end
     end
@@ -111,6 +113,29 @@ class Linklist
     return string += "nil"
   end
 
+  def insert_at(value, index)
+    return nil if @head.nil?
+
+    new_node = Node.new(value)
+    previous_node = self.at(index - 1)
+    node = self.at(index)
+    previous_node.next = new_node
+    new_node.next = node
+    return @head
+  end
+
+  def remove_at(index)
+    return nil if @head.nil?
+
+    current_node = self.at(index)
+    previous_node = self.at(index - 1)
+    next_node = self.at(index + 1)
+
+    previous_node.next = next_node
+    
+    return current_node
+  end
+
   def each
     return nil if @head.nil?
     node = @head
@@ -118,14 +143,5 @@ class Linklist
       yield node
       node = node.next
     end
-  end
-
-  # extra credit
-  def insert_at(value, index)
-
-  end
-
-  def remove_at(index)
-
   end
 end
