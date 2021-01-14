@@ -4,44 +4,18 @@ require_relative './player.rb'
 class Board
   attr_accessor :board
 
-  def initialize(rows, columns)
+  def initialize
     #create a 3 x 3 array. 
-    @rows = rows
-    @columns = columns
+    @rows = 3
+    @columns = 3
     @board = Array.new(@rows) { Array.new(@columns) { Cell.new } }
     @players = []
   end
 
-  def [](row, column)
-    @board[row][column]
-  end
-
   def play_game
-    puts "Welcome to Tic-tac-toe"
-    puts "What is player 1's name?"
-    player_1 = gets.chomp
-    puts "What is player 1's marker?"
-    marker_1 = gets.chomp
-    puts "What is player 2's name?"
-    player_2 = gets.chomp
-    puts "What is player 2's marker?"
-    marker_2 = gets.chomp
-    @players << Player.new(player_1, marker_1)
-    @players << Player.new(player_2, marker_2)
-    self.display_board
-
-    #looking to loop 9 times, bc theres 9 turns. each turn, the current player will be the next player. 
-    (@rows * @columns).times do |turn|
-      current_turn = turn % 2
-      current_player = @players[current_turn]
-      self.take_turn(current_player)
-      if self.game_over?
-        self.display_board
-        return "Game Over!"
-      end
-      self.display_board
-    end
-    puts "It's a tie!"
+    game_intro  
+    display_board
+    game_loop
   end
 
   def game_over?
@@ -149,10 +123,44 @@ class Board
     puts string
   end
 
+  def game_intro
+    puts "Welcome to Tic-tac-toe"
+    puts "What is player 1's name?"
+    # this should just be player_1.response.
+    player_1 = gets.chomp
+    puts "What is player 1's marker?"
+    marker_1 = gets.chomp
+    puts "What is player 2's name?"
+    player_2 = gets.chomp
+    puts "What is player 2's marker?"
+    marker_2 = gets.chomp
+    @players << Player.new(player_1, marker_1)
+    @players << Player.new(player_2, marker_2)
+  end
+
+  def game_loop
+    9.times do |turn|
+      current_turn = turn % 2
+      current_player = @players[current_turn]
+      self.take_turn(current_player)
+      if self.game_over?
+        self.display_board
+        return "Game Over!"
+      end
+      self.display_board
+    end
+    puts "It's a tie!"
+  end
+
+  def [](row, column)
+    @board[row][column]
+  end
+
   def spot_taken?(move)
     if self[move[0], move[1]].value != "-"
       return false
     end
     true
   end
+
 end
