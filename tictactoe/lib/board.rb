@@ -2,7 +2,7 @@ require_relative './cell.rb'
 require_relative './player.rb'
 
 class Board
-  attr_accessor :board
+  attr_accessor :board, :players
 
   def initialize
     #create a 3 x 3 array. 
@@ -19,9 +19,6 @@ class Board
   end
 
   def game_over?
-    # if a row or column, or diagonal (2 diagonals) are the same, then win is true.
-    # how to code this?
-    # check each possibilities (8)
     if self[0,0].value == self[0,1].value && self[0,0].value == self[0,2].value
       winning_marker = self[0,0].value
       if @players[0].marker == winning_marker
@@ -98,18 +95,6 @@ class Board
     return false
   end
 
-  def take_turn(player)
-    coordinates = player.move
-    # need to check if  the move has already been played. Check if the value at that cell is "". if it is, then go ahead and make the move. if it isn't, then the move has been done. 
-    while spot_taken?(coordinates) == false
-      puts "This spot has been taken on the board; Please choose again:"
-      coordinates = player.move
-    end
-    row = coordinates[0]
-    col = coordinates[1]
-    self[row, col].change_value(player.marker)
-  end
-
   def display_board
     string = ""
     @board.each do |row|
@@ -125,42 +110,64 @@ class Board
 
   def game_intro
     puts "Welcome to Tic-tac-toe"
-    puts "What is player 1's name?"
-    # this should just be player_1.response.
-    player_1 = gets.chomp
-    puts "What is player 1's marker?"
-    marker_1 = gets.chomp
-    puts "What is player 2's name?"
-    player_2 = gets.chomp
-    puts "What is player 2's marker?"
-    marker_2 = gets.chomp
-    @players << Player.new(player_1, marker_1)
-    @players << Player.new(player_2, marker_2)
+    puts "What is the first player's name?"
+    name_1 = player_input
+    puts "What is the first player's marker?"
+    marker_1 = player_input
+    player_1 = create_player(name_1, marker_1)
+    puts "What is the second player's name?"
+    name_2 = player_input
+    puts "What is the second player's marker?"
+    marker_2 = player_input
+    player_2 = create_player(name_2, marker_2)
+  end
+
+  def player_input 
+    gets.chomp
+  end
+
+  def create_player(player, marker)
+    new_player = Player.new(player, marker)
+    @players << new_player
   end
 
   def game_loop
     9.times do |turn|
-      current_turn = turn % 2
-      current_player = @players[current_turn]
-      self.take_turn(current_player)
-      if self.game_over?
-        self.display_board
+      turn_order(turn)
+      if game_over?
+        display_board
         return "Game Over!"
       end
-      self.display_board
+      display_board
     end
-    puts "It's a tie!"
+  end
+
+  def turn_order(turn_number)
+    current_player = @players[turn_number % 2]
+    take_turn(current_player)
+  end
+
+  def take_turn(player) 
+    loop do
+      coordinates = player.move
+      if verify_guess(coordinates)
+        row = coordinates[0]
+        col = coordinates[1]
+        self[row, col].change_value(player.marker)
+        break
+      end
+    end
   end
 
   def [](row, column)
     @board[row][column]
   end
 
-  def spot_taken?(move)
+  def verify_guess(move)
     if self[move[0], move[1]].value != "-"
+      puts "This spot has been taken on the board; Please choose again:"
       return false
     end
     true
   end
-
 end
