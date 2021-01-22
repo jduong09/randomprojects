@@ -34,18 +34,29 @@ class Game
 
   def take_turn
     current_player = @players[@turn % 2]
+    opponents_player = @players[(@turn + 1) % 2]
     @turn += 1
     puts "#{current_player.name}, it is your turn. Please type the row and column you want your game piece to be."
     row = gets.to_i
     col = gets.to_i
     coordinates = [row, col]
-    change_board(coordinates, current_player.marker) if verify_input(coordinates)
+    change_board(coordinates, current_player.marker, opponents_player.marker) if verify_input(coordinates)
   end
 
-  def change_board(coordinates, player_marker)
+  def change_board(coordinates, player_marker, opponents_marker)
     row = coordinates[0]
     col = coordinates[1]
-    @board[row][col] = player_marker
+    new_spot = find_available_spot(row, col, player_marker, opponents_marker)
+    new_row = new_spot[0]
+    new_col = new_spot[1]
+    @board[new_row][new_col] = player_marker
+  end
+
+  def find_available_spot(row, col, player_marker, opponents_marker)
+    return [row - 1, col] if @board[row][col] == opponents_marker
+    return [row, col] if row == 5|| row < 0
+
+    find_available_spot(row + 1, col, player_marker, opponents_marker)
   end
 
   def verify_input(coordinates)
@@ -63,24 +74,15 @@ class Game
     end
   end
 
-  def game_over?
-  end
+  #def game_over?
+  #end
 
-  def check_vertical?(marker, row, col, matches = 0)
-    return true if matches == 4
-    return false if row > 5 || row < 0
-    return false if @board[row][col] != marker
-
-    matches += 1 if @board[row][col] == marker
-    check_vertical?(marker, row + 1, col, matches)
-    check_vertical?(marker, row - 1, col, matches)
-  end
-
-  #def check_horizontal?(marker, row, col, matches = 0)
+  #def check_vertical?(marker, row, col, matches = 0)
     #return true if matches == 4
-    #return false if @board[row][col] == nil || @board[row][col] != marker
+    #return false if row > 5 || row < 0
+    #return false if @board[row][col] != marker
 
     #matches += 1 if @board[row][col] == marker
-    #check_vertical?(marker, row, col + 1, matches)
+    #check_vertical?(marker, row + 1, col, matches)
   #end
 end

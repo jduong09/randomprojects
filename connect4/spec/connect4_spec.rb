@@ -13,10 +13,7 @@ describe Game do
   end
 
   describe "#play_game" do
-    #describe "#intro" do
-      #intro will be puts statements.
-      #no need to test
-    #end
+    
     describe "#assign_players" do
       subject(:game_assign) { described_class.new() }
       let (:player) { Player.new("Justin", "x") }
@@ -54,25 +51,52 @@ describe Game do
           game_turn.take_turn
         end
 
-        it "changes the player's turn" do
+        it "on second turn, prompts player 2 to take turn" do
           game_turn.take_turn
-          turn = game_turn.instance_variable_get(:@turn)
-          expect(turn).to eql(1)
+          message_prompt = "Justin Tran, it is your turn. Please type the row and column you want your game piece to be."
+          expect(game_turn).to receive(:puts).with(message_prompt)
+          #expect(turn).to eql(1)
+          game_turn.take_turn
         end
 
         describe "#change_board" do
           subject(:board_change) { described_class.new() }
 
-          it "receives input and changes @board" do
+          it "moves game piece down to the bottom if no spots are taken" do
             player_marker = "x"
-            coordinates = [0,1]
-            board_change.change_board(coordinates, player_marker)
-            expect(board_change.board[0][1]).to eq("x")  
+            opponents_marker = "o"
+            coordinates = [0,0]
+            board_change.change_board(coordinates, player_marker, opponents_marker)
+            expect(board_change.board[5][0]).to eq("x")
+          end
+
+          it "moves game piece down, and stops before opponent's game piece" do
+            #set up: place opponents marker at the bottom
+            player_marker = "x"
+            opponents_marker = "o"
+            opponents_coordinates = [0, 0]
+            board_change.change_board(opponents_coordinates, opponents_marker, player_marker)
+
+            coordinates = [0,0]
+            board_change.change_board(coordinates, player_marker, opponents_marker)
+            expect(board_change.board[4][0]).to eq("x")
+            expect(board_change.board[5][0]).to eq("o")
+          end
+
+          it "keeps previous player's move" do
+            player_marker = "x"
+            opponents_marker = "o"
+            opponents_coordinates = [0, 0]
+            board_change.change_board(opponents_coordinates, opponents_marker, player_marker)
+
+            coordinates = [0,0]
+            board_change.change_board(coordinates, player_marker, opponents_marker)
+            expect(board_change.board[5][0]).to eq("o")
           end
         end
 
         describe "#verify_input" do
-          subject(:game_invalid_input) { described_class.new }
+          subject(:game_invalid_input) { described_class.new() }
 
           it "returns error message if row input is too high" do
             invalid_coordinates = [7, 0]
@@ -101,27 +125,25 @@ describe Game do
             expect(game_invalid_input).to receive(:puts).with(error_message)
             game_invalid_input.verify_input(invalid_coordinates)
           end
-
-          before do
-            game_invalid_input.change_board([0,0], "x")
-          end
+          
           it "returns error message if coordinates is taken" do
+            game_invalid_input.change_board([0,0], "x", "o")
             error_message = "Coordinates taken. Choose again."
             expect(game_invalid_input).to receive(:puts).with(error_message)
-            game_invalid_input.verify_input([0,0])
+            game_invalid_input.verify_input([5,0])
           end
         end
       end
 
-      describe "#game_over?" do
-        subject(:game_win) { described_class.new() }
-        
-        it "returns victory message if player has reached win conditions" do
-          victory_message = "Justin wins! GG!"
-          expect(game_win).to receive(:puts).with(victory_message)
-          game_win.game_over?
-        end
-      end
+      #describe "#game_over?" do
+        #subject(:game_win) { described_class.new() }
+
+        #it "returns victory message if player has reached win conditions" do
+          #victory_message = "Justin wins! GG!"
+          #expect(game_win).to receive(:puts).with(victory_message)
+          #game_win.game_over?
+        #end
+      #end
     end
   end
 end
