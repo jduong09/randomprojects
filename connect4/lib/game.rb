@@ -14,6 +14,8 @@ class Game
     puts "How many players will be playing?"
     num_of_players = gets.to_i
     assign_players(num_of_players)
+    display_board
+    game_loop
   end
 
   def assign_players(number_of_players)
@@ -30,6 +32,15 @@ class Game
     puts "What is the player's marker?"
     player_marker = gets.chomp
     Player.new(player_name, player_marker)
+  end
+
+  def game_loop
+    loop do
+      turn = take_turn
+      display_board
+      break if game_over?(turn[0], turn[1])
+    end
+    puts "Winner!"
   end
 
   def take_turn
@@ -50,11 +61,13 @@ class Game
     new_row = new_spot[0]
     new_col = new_spot[1]
     @board[new_row][new_col] = player_marker
+    return [new_row, new_col], player_marker
   end
 
   def find_available_spot(row, col, player_marker, opponents_marker)
-    return [row - 1, col] if @board[row][col] == opponents_marker
+    return [row - 1, col] if @board[row][col] == opponents_marker || @board[row][col] == player_marker
     return [row, col] if row == 5|| row < 0
+
 
     find_available_spot(row + 1, col, player_marker, opponents_marker)
   end
@@ -74,15 +87,93 @@ class Game
     end
   end
 
-  #def game_over?
-  #end
+  def game_over?(coordinates, marker)
+    return true if check_vertical?(marker, coordinates[0], coordinates[1])
+    return true if check_horizontal_left?(marker, coordinates[0], coordinates[1])
+    return true if check_horizontal_right?(marker, coordinates[0], coordinates[1])
+    return true if check_diagonally_down_left?(marker, coordinates[0], coordinates[1])
+    return true if check_diagonally_down_right?(marker, coordinates[0], coordinates[1])
+    return true if check_diagonally_up_right?(marker, coordinates[0], coordinates[1])
+    return true if check_diagonally_up_left?(marker, coordinates[0], coordinates[1])
+  end
 
-  #def check_vertical?(marker, row, col, matches = 0)
-    #return true if matches == 4
-    #return false if row > 5 || row < 0
-    #return false if @board[row][col] != marker
+  def check_vertical?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if row > 5 || row < 0
+    return false if @board[row][col] != marker
 
-    #matches += 1 if @board[row][col] == marker
-    #check_vertical?(marker, row + 1, col, matches)
-  #end
+    matches += 1 if @board[row][col] == marker
+    check_vertical?(marker, row + 1, col, matches)
+  end
+
+  def check_horizontal_left?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_horizontal_left?(marker, row, col - 1, matches)
+  end
+
+  def check_horizontal_right?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_horizontal_right?(marker, row, col + 1, matches)
+  end
+
+  def check_diagonally_down_left?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if row > 5 || row < 0
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_diagonally_down_left?(marker, row + 1, col - 1, matches)
+  end
+
+  def check_diagonally_down_right?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if row > 5 || row < 0
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_diagonally_down_right?(marker, row + 1, col + 1, matches)
+  end
+
+  def check_diagonally_up_right?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if row > 5 || row < 0
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_diagonally_up_right?(marker, row - 1, col + 1, matches)
+  end
+
+  def check_diagonally_up_left?(marker, row, col, matches = 0)
+    return true if matches == 4
+    return false if row > 5 || row < 0
+    return false if col > 6 || col < 0
+    return false if @board[row][col] != marker
+
+    matches += 1 if @board[row][col] == marker
+    check_diagonally_up_left?(marker, row - 1, col - 1, matches)
+  end
+
+  def display_board
+    string = ""
+    @board.each do |row|
+      row_string = ""
+      row.each do |col|
+        row_string += col + " "
+      end
+      row_string += "\n"
+      string += row_string
+    end
+    puts string
+  end
 end

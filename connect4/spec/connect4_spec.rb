@@ -135,15 +135,89 @@ describe Game do
         end
       end
 
-      #describe "#game_over?" do
-        #subject(:game_win) { described_class.new() }
+      describe "#game_over?" do
+        subject(:game_win) { described_class.new() }
+        
+        it "returns true if player has 4 markers going vertically down" do
+          game_win.change_board([0,0], "x", "o")
+          game_win.change_board([0,0], "x", "o")
+          game_win.change_board([0,0], "x", "o")
+          game_win.change_board([0,0], "x", "o")
+          expect(game_win.game_over?([2,0], "x")).to be true
+        end
 
-        #it "returns victory message if player has reached win conditions" do
-          #victory_message = "Justin wins! GG!"
-          #expect(game_win).to receive(:puts).with(victory_message)
-          #game_win.game_over?
-        #end
-      #end
+        it "returns true if player has 4 markers going horizontally left" do
+          game_win.change_board([0,0], "x", "o")
+          game_win.change_board([0,1], "x", "o")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,3], "x", "o")
+          expect(game_win.game_over?([5,3], "x")).to be true
+        end
+
+        it "returns true if player has 4 markers going horizontally right" do
+          game_win.change_board([0,3], "x", "o")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,1], "x", "o")
+          game_win.change_board([0,0], "x", "o")
+          expect(game_win.game_over?([5,0], "x")).to be true
+        end
+
+        it "returns true if player has 4 markers going down diagonally left" do
+          game_win.change_board([0,0], "x", "o")
+          game_win.change_board([0,1], "x", "o")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,1], "x", "o")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "x", "o")
+          expect(game_win.game_over?([2,3], "x")).to be true
+        end
+
+        it "returns true if player has 4 markers going down diagonally right" do
+          game_win.change_board([0,4], "x", "o")
+          game_win.change_board([0,5], "x", "o")
+          game_win.change_board([0,6], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,5], "x", "o")
+          game_win.change_board([0,4], "x", "o")
+          game_win.change_board([0,4], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "x", "o")
+          expect(game_win.game_over?([2,3], "x")).to be true
+        end
+
+        it "returns true if player has 4 markers going up diagonally right" do
+          game_win.change_board([0,3], "x", "o")
+          game_win.change_board([0,1], "o", "x")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,1], "x", "o")
+          game_win.change_board([0,2], "o", "x")
+          game_win.change_board([0,2], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "x", "o")
+          game_win.change_board([0,0], "x", "o")
+          expect(game_win.game_over?([5,0], "x")).to be true
+        end
+
+        it "returns true if player has 4 markers going up diagonally right" do
+          game_win.change_board([0,3], "x", "o")
+          game_win.change_board([0,5], "o", "x")
+          game_win.change_board([0,5], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,4], "x", "o")
+          game_win.change_board([0,4], "o", "x")
+          game_win.change_board([0,4], "x", "o")
+          game_win.change_board([0,3], "o", "x")
+          game_win.change_board([0,3], "x", "o")
+          game_win.change_board([0,6], "x", "o")
+          expect(game_win.game_over?([5,6], "x")).to be true
+        end
+      end
     end
   end
 end
