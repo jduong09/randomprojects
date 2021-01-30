@@ -56,19 +56,35 @@ class Tree
     end
   end
 
-  def delete(value, node = @root)
-    return nil if node.nil?
+  # Node to be deleted is leaf: Simply remove from the tree. 
+  # Node to be deleted has only one child: Copy the child to the node and delete the child 
+  # Node to be deleted has two children: Find inorder successor of the node. Copy contents of the inorder successor to the node and delete the inorder successor. Note that inorder predecessor can also be used. 
+  # Inorder successor: left mode node of right child of deleted node.
+  def delete(node = @root, data)
+    return node if node.nil?
 
+    if node.data > data
+      node.left = delete(node.left, data)
+      return node
+    elsif node.data < data
+      node.right = delete(node.right, data)
+      return node
+    else
+      return node.left if node.right.nil?
+      return node.right if node.left.nil?
+
+      left_min = find_left_min_node(node.right)
+      node.data = left_min.data
+      node.right = delete(node.right, left_min.data)
+    end
     node
   end
 
-  #def find_min(node)
-    #current_node = node
-    #while current_node.left == true
-      #current_node = current_node.left
-    #end
-    #return current_node
-  #end
+  def find_left_min_node(node)
+    node = node.left until node.left.nil?
+
+    node
+  end
 
   def find(value, node = @root)
     return node if node.data == value || node == nil
@@ -94,14 +110,17 @@ class Tree
     return nil if node.nil?
     
     queue.push(node)
+    level_order_array = []
 
     until queue.empty?
       current = queue[0]
+      level_order_array << current
       puts "#{current.data}"
       queue.push(current.left) if !current.left.nil?
       queue.push(current.right) if !current.right.nil?
       queue.shift 
     end
+    return level_order_array
   end
 
   # Follows the (LDR) pattern
@@ -133,11 +152,10 @@ class Tree
 
   # Height is defined as the number of edges in longest path from a given node to a leaf node.
   def height(node = @root, idx = 0)
-    return nil if node.nil?
+    return 0 if node.nil?
     return idx if node.left.nil? && node.right.nil?
 
-    left_height = height(node.left, idx + 1)
-    right_height = height(node.right, idx + 1)
+    height(node.left) >= height(node.right) ? 1 + height(node.left) : 1 + height(node.right)
   end
   
   # Depth is defined as the number of edges in path from a given node to the tree’s root node.
@@ -151,11 +169,19 @@ class Tree
   # A balanced tree is one where the difference between heights of left subtree and right subtree of every node is not more than 1.
   def balanced?(node = @root)
     return true if node.nil?
+
+    left_height = height(node.left)
+    right_height = height(node.right)
+
+    return true if left_height - right_height <= 1 && balanced?(node.left) && balanced?(node.right)
+
+    false
   end
 
   # Tip: You’ll want to create a level-order array of the tree before passing the array back into the #build_tree method.
   def rebalance
-
+    unbalanced_array = self.level_order
+    build_tree(unbalanced_array)
   end
 
   def pretty_print(node = @root, prefix = '', is_left = true)
@@ -168,8 +194,8 @@ end
 # write a simple driver script
 
 newBST = Tree.new([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324])
-
-puts newBST.balanced?
+newBST.pretty_print
+newBST.level_order
 
 # build tree should return 
 # the input needs to be sorted and duplicates need to be removed before inserting into the build tree method.
