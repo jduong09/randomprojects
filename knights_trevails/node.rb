@@ -1,21 +1,21 @@
 class Node
-  attr_accessor :position, :successors
+  attr_accessor :position, :children
 
   def initialize(position)
     @position = position
-    @successors = []
+    @children = []
   end
 
-  def add_edge(successor)
-    @successors << successor
+  def add_edge(child)
+    @children << child
   end
 
   def get_next
-    @successors[0].position
+    @children[0]
   end
 
   def to_s
-    "#{@position} -> #{@successors.map(&:position).join(" ")}"
+    "#{@position} -> #{@children.map(&:position).join(" ")}"
   end
 
 end
