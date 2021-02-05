@@ -1,8 +1,9 @@
 class Node
-  attr_accessor :position, :children
+  attr_accessor :position, :children, :parent
 
   def initialize(position)
     @position = position
+    @parent = nil
     @children = []
   end
 
@@ -12,10 +13,6 @@ class Node
 
   def get_next
     @children[0]
-  end
-
-  def to_s
-    "#{@position} -> #{@children.map(&:position).join(" ")}"
   end
 
 end

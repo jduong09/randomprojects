@@ -12,6 +12,7 @@ class Graph
 
   def add_edge(first_position, second_position)
     @nodes[first_position].add_edge(@nodes[second_position])
+    @nodes[second_position].parent = @nodes[first_position].position
   end
 
   def [](position)
