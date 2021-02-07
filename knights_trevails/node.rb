@@ -7,12 +7,8 @@ class Node
     @children = []
   end
 
-  def add_edge(child)
+  def add_child(child)
     @children << child
-  end
-
-  def get_next
-    @children[0]
   end
 
 end
