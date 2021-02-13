@@ -32,4 +32,7 @@ class Knight
     end
   end
 
+  def change_location(coordinates)
+    @location = coordinates
+  end
 end

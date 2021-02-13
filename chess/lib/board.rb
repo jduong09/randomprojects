@@ -25,25 +25,28 @@ class Board
     input = gets.chomp
     col = find_file(input[0])
     row = find_rank(input[1])
-    
-
+  
     piece = @gamepieces[color][type].select { |piece| piece.location == input }
-    gamepiece_moves(piece[0], [col, row])
 
+    puts "Where do you want your #{piece[0].icon} to go?"
+    new_location = gets.chomp
+    possible_moves = gamepiece_moves(piece[0], [row, col])
+
+    piece[0].change_location(new_location) if possible_moves.include?(new_location)
+    change_board(new_location, piece[0].icon)
+    change_board(input, "-")
+    display_board
   end
   #castling. Separate method?
   def gamepiece_moves(gamepiece, input)
     all_moves = gamepiece.moves(input)
     all_moves.map do |move|
-      col = find_file(input[0])
-      row = find_rank(input[1])
-      return col, row
+      index_to_rank(move)
     end
     #puts "Where do you want your #{gamepiece.icon} to go?"
     #user_input = gets.chomp
     #row = find_rank(input[1])
     #col = find_file(input[0])
-
 
   end
 
@@ -53,7 +56,7 @@ class Board
     end
     @board.unshift([" ", "a", "b", "c", "d", "e", "f", "g", "h"])
     create_gamepieces
-    fill_gamepieces
+    add_gamepieces
     display_board
   end
 
@@ -76,7 +79,14 @@ class Board
     @board[0].index(letter)
   end
 
-  def fill_gamepieces
+  def index_to_rank(index) # rank = row; file = col
+    #board coordinates are "letter num"
+    #finding the right file and rank given the index coordinates, and then returning the spot in chess terms.
+    # "col row"
+    @board[0][index[1]] + @board[index[0]].first
+  end
+
+  def add_gamepieces
     @gamepieces["white"].each_value do |value|
       value.each do |piece|
         change_board(piece.location, piece.icon)
@@ -128,6 +138,6 @@ class Board
     rank = find_rank(coordinates[1])
     @board[rank][file] = element
   end
-
+  
 end
 
