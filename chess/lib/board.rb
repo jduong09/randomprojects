@@ -19,37 +19,6 @@ class Board
     @gamepieces = {}
   end
 
-  def take_turn(color)
-    puts "It is your turn. Choose the piece you want to move by typing the location of the piece."
-    type = gets.chomp
-    input = gets.chomp
-    col = find_file(input[0])
-    row = find_rank(input[1])
-  
-    piece = @gamepieces[color][type].select { |piece| piece.location == input }
-
-    puts "Where do you want your #{piece[0].icon} to go?"
-    new_location = gets.chomp
-    possible_moves = gamepiece_moves(piece[0], [row, col])
-
-    piece[0].change_location(new_location) if possible_moves.include?(new_location)
-    change_board(new_location, piece[0].icon)
-    change_board(input, "-")
-    display_board
-  end
-  #castling. Separate method?
-  def gamepiece_moves(gamepiece, input)
-    all_moves = gamepiece.moves(input)
-    all_moves.map do |move|
-      index_to_rank(move)
-    end
-    #puts "Where do you want your #{gamepiece.icon} to go?"
-    #user_input = gets.chomp
-    #row = find_rank(input[1])
-    #col = find_file(input[0])
-
-  end
-
   def fill_board
     @board.each_with_index do |row, idx|
       row.unshift("#{8 - idx}")
@@ -60,8 +29,53 @@ class Board
     display_board
   end
 
+  #castling. Separate method?
+  def gamepiece_moves(gamepiece, input)
+    all_moves = gamepiece.moves(input)
+    all_moves.map do |move|
+      index_to_rank(move)
+    end
+  end
+
   def [](col, row)
     @board[row][col]
+  end
+
+  def find_gamepiece(color)
+    puts "It is your turn. Choose the piece you want to move by typing the name of the piece. ex: #{"knight"}"
+    type = gets.chomp
+    puts "Now type the location of the piece you want to move. ex: #{"a1"}"
+    input = gets.chomp
+  
+    piece = @gamepieces[color][type].select { |piece| piece.location == input }
+    
+    return piece[0]
+  end
+
+  def get_rank_and_file(coordinates)
+    col = find_file(coordinates[0])
+    row = find_rank(coordinates[1])
+    
+    return row, col
+  end
+
+  def display_board
+    string = ""
+    @board.each do |row|
+      row_string = ""
+      row.each do |col|
+        row_string += col + " "
+      end
+      row_string += "\n"
+      string += row_string
+    end
+    puts string
+  end
+
+  def move_gamepiece(old_location, new_location, element)
+    change_board(old_location, "-")
+    change_board(new_location, element)
+    display_board
   end
 
   private
@@ -119,25 +133,11 @@ class Board
       "queen" => [Queen.new("black")]
      }
   end
-
-  def display_board
-    string = ""
-    @board.each do |row|
-      row_string = ""
-      row.each do |col|
-        row_string += col + " "
-      end
-      row_string += "\n"
-      string += row_string
-    end
-    puts string
-  end
  
   def change_board(coordinates, element)
     file = find_file(coordinates[0])
     rank = find_rank(coordinates[1])
     @board[rank][file] = element
   end
-  
-end
 
+end
