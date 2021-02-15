@@ -41,12 +41,8 @@ class Board
     @board[row][col]
   end
 
-  def find_gamepiece(color)
-    puts "It is your turn. Choose the piece you want to move by typing the name of the piece. ex: #{"knight"}"
-    type = gets.chomp
-    puts "Now type the location of the piece you want to move. ex: #{"a1"}"
-    input = gets.chomp
-  
+  def find_gamepiece(color, type, input)
+
     piece = @gamepieces[color][type].select { |piece| piece.location == input }
     
     return piece[0]
