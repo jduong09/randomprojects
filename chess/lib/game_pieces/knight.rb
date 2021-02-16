@@ -1,6 +1,6 @@
 class Knight
   attr_accessor :location
-  attr_reader :icon
+  attr_reader :icon, :color
   
   def initialize(color, location)
     @color = color
