@@ -1,6 +1,5 @@
 class Pawn
-  attr_accessor :location
-  attr_reader :icon, :color
+  attr_reader :icon, :color, :location
   
   def initialize(color, location)
     @color = color
@@ -8,4 +7,7 @@ class Pawn
     @icon = @color == "white" ? "\u2659" : "\u265F"
   end
   
+  def change_location(coordinates)
+    @location = coordinates
+  end
 end

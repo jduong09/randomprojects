@@ -38,7 +38,7 @@ class Board
 
   def find_gamepiece(location)
     index = get_rank_and_file(location)
-    @board[index[0]][index[1]]
+    gamepiece = @board[index[0]][index[1]]
   end
 
   def get_rank_and_file(coordinates)
@@ -69,23 +69,20 @@ class Board
   #check if move takes an enemies gamepiece (place, and remove enemies gamepiece from game.)
 
   def move_gamepiece(old_location, new_location, element)
-    #old_location is like b3
-    #new_location is like a1
-    #element is a gamepiece, ex: knight.
     new_spot = get_rank_and_file(new_location)
 
-    if @board[new_spot[0]][new_spot[1]] != "-"
-      if @board[new_spot[0]][new_spot[1]].color == element.color
-        puts "Can not move piece to this spot. This spot is taken by ally gamepiece."
-        return false
-      else
-        puts "Put code here that will overtake the enemy gamepiece."
-      end
-    else
-      change_board(old_location, "-")
-      change_board(new_location, element)
-    end
+    change_board(old_location, "-")
+    change_board(new_location, element)
 
+    display_board
+  end
+
+  def remove_gamepiece(gamepiece, move)
+    dead_gamepiece = find_gamepiece(move)
+    move_gamepiece(gamepiece.location, move, gamepiece)
+    gamepiece.change_location(move)
+    dead_gamepiece.change_location("dead")
+    
     display_board
   end
 
@@ -99,17 +96,22 @@ class Board
 
     if @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
       return true
+    elsif !possible_moves.include?(new_location)
+      puts "That move is impossible for #{gamepiece.icon}."
+      return false
     elsif gamepiece.color == @board[new_spot[0]][new_spot[1]].color
       puts "Placement of gamepiece on ally piece. Select a valid location for your #{gamepiece.icon}."
       return false
     else
-      return false
+      return true
     end
   end
 
   def enemy_spot?(color, move)
     index = get_rank_and_file(move)
     enemy_color = color == "white" ? "black" : "white"
+    new_spot = @board[index[0]][index[1]]
+    
     if @board[index[0]][index[1]].color == enemy_color
       return true
     end
