@@ -1,7 +1,8 @@
 class Knight
-  attr_reader :icon, :color, :location
-  
+  attr_reader :icon, :color, :location, :name
+
   def initialize(color, location)
+    @name = "N"
     @color = color
     @location = location
     @icon = @color == "white" ? "\u2658" : "\u265E"

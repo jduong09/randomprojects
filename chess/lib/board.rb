@@ -27,9 +27,29 @@ class Board
   #castling. Separate method?
   def gamepiece_moves(gamepiece, input)
     all_moves = gamepiece.moves(input)
-    all_moves.map do |move|
-      index_to_rank(move)
+
+    coordinates = all_moves.map { |move| index_to_rank(move) } 
+    
+    if gamepiece.name == "P" 
+      if gamepiece.color == "white"
+        directions = [[-1, -1], [-1, 1]]
+        directions.each do |direction|
+          row = input[0] + direction[0]
+          col = input[1] + direction[1]
+          move = index_to_rank([row, col])
+          coordinates << move if enemy_spot?(gamepiece.color, move)
+        end
+      elsif gamepiece.color == "black"
+        directions = [[1, -1], [1, 1]]
+        directions.each do |direction|
+          row = input[0] + direction[0]
+          col = input[1] + direction[1]
+          move = index_to_rank([row, col])
+          coordinates << move if enemy_spot?(gamepiece.color, move)
+        end
+      end
     end
+    coordinates
   end
 
   def [](row, col)
@@ -67,13 +87,18 @@ class Board
 
   #check if move puts the gamepiece on a ally gamepiece (should not be able to do that)
   #check if move takes an enemies gamepiece (place, and remove enemies gamepiece from game.)
-
-  def move_gamepiece(old_location, new_location, element)
+  #check if move runs into any ally gamepieces on the way to its destination. If it does, it cannot make that move.
+    #this is not the case for Knight, which can jump over pieces.
+    #Try to simulate the movement of the gamepiece in order to see if there are any ally/enemy moves resulting in a faulty move.
+  def move_gamepiece(old_location, new_location, gamepiece)
     new_spot = get_rank_and_file(new_location)
 
+    #knight can jump over pieces, therefore it's movement is as simple as these two lines.
     change_board(old_location, "-")
-    change_board(new_location, element)
+    change_board(new_location, gamepiece)
 
+    #rook, bishop and queen can move infinitely in one direction
+    #but if there is an ally in between it must be stopped.
     display_board
   end
 
@@ -94,6 +119,16 @@ class Board
     possible_moves = gamepiece_moves(gamepiece, index)
     new_spot = get_rank_and_file(new_location)
 
+    #checks for if there is a unit in front of the pawn, which doesn't allow the pawn to move forward.
+    if gamepiece.name == "P" && enemy_spot?(gamepiece.color, new_location)
+      row = new_spot[0] - index[0]
+      col = new_spot[1] - index[1]
+      if [row, col] == [1, 0] || [row, col] == [-1, 0]
+        puts "That move is not possible for the pawn."
+        return false
+      end
+    end
+
     if @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
       return true
     elsif !possible_moves.include?(new_location)
@@ -112,13 +147,13 @@ class Board
     enemy_color = color == "white" ? "black" : "white"
     new_spot = @board[index[0]][index[1]]
     
-    if @board[index[0]][index[1]].color == enemy_color
+    if new_spot.instance_of?(String)
+      return false
+    elsif new_spot.color == enemy_color
       return true
     end
-    false
-  end
 
-  private
+  end
 
   def find_rank(num) #row
     @board.each_with_index do |row, idx|
@@ -134,9 +169,6 @@ class Board
   end
 
   def index_to_rank(index) # rank = row; file = col
-    #board coordinates are "letter num"
-    #finding the right file and rank given the index coordinates, and then returning the spot in chess terms.
-    # "col row"
     @board[0][index[1]] + @board[index[0]].first
   end
 
