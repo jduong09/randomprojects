@@ -93,12 +93,9 @@ class Board
   def move_gamepiece(old_location, new_location, gamepiece)
     new_spot = get_rank_and_file(new_location)
 
-    #knight can jump over pieces, therefore it's movement is as simple as these two lines.
     change_board(old_location, "-")
     change_board(new_location, gamepiece)
 
-    #rook, bishop and queen can move infinitely in one direction
-    #but if there is an ally in between it must be stopped.
     display_board
   end
 
@@ -119,7 +116,6 @@ class Board
     possible_moves = gamepiece_moves(gamepiece, index)
     new_spot = get_rank_and_file(new_location)
 
-    #checks for if there is a unit in front of the pawn, which doesn't allow the pawn to move forward.
     if gamepiece.name == "P" && enemy_spot?(gamepiece.color, new_location)
       row = new_spot[0] - index[0]
       col = new_spot[1] - index[1]
