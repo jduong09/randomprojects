@@ -125,6 +125,58 @@ class Board
       end
     end
 
+    if gamepiece.name == "B" 
+      #this subtraction is done so we can see how far and what direction the new piece is in relation to the current position.
+      row = new_spot[0] - index[0]
+      col = new_spot[1] - index[1]
+      if row.negative? && col.negative? #forward diagonal left [-1, -1]
+        simulate_northwest_movement(row, col, index, gamepiece)
+      elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
+        simulate_northeast_movement(row, col, index, gamepiece)
+      elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
+        simulate_southwest_movement(row, col, index, gamepiece)
+      else #downward diagonal right [1,1]
+        simulate_southeast_movement(row, col, index, gamepiece)
+      end
+    end
+
+    if gamepiece.name == "R" 
+      #this subtraction is done so we can see how far and what direction the new piece is in relation to the current position.
+      row = new_spot[0] - index[0]
+      col = new_spot[1] - index[1]
+      if row.negative? && col == 0 #north [-1, 0]
+        simulate_north_movement(row, col, index, gamepiece)
+      elsif !row.negative? && col == 0 #south [1, 0]
+        simulate_south_movement(row, col, index, gamepiece)
+      elsif col.negative? && row == 0 #west [0, -1]
+        simulate_west_movement(row, col, index, gamepiece)
+      else #east [0, 1]
+        simulate_east_movement(row, col, index, gamepiece)
+      end
+    end
+
+    if gamepiece.name == "Q"
+      row = new_spot[0] - index[0]
+      col = new_spot[1] - index[1]
+      if row.negative? && col == 0 #north [-1, 0]
+        simulate_north_movement(row, col, index, gamepiece)
+      elsif !row.negative? && col == 0 #south [1, 0]
+        simulate_south_movement(row, col, index, gamepiece)
+      elsif col.negative? && row == 0 #west [0, -1]
+        simulate_west_movement(row, col, index, gamepiece)
+      elsif !col.negative? && row == 0 #east [0, 1]
+        simulate_east_movement(row, col, index, gamepiece)
+      elsif row.negative? && col.negative? #forward diagonal left [-1, -1]
+        simulate_northwest_movement(row, col, index, gamepiece)
+      elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
+        simulate_northeast_movement(row, col, index, gamepiece)
+      elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
+        simulate_southwest_movement(row, col, index, gamepiece)
+      else #downward diagonal right [1,1]
+        simulate_southeast_movement(row, col, index, gamepiece)
+      end
+    end
+
     if @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
       return true
     elsif !possible_moves.include?(new_location)
@@ -208,4 +260,131 @@ class Board
     @board[rank][file] = element
   end
 
+  def simulate_northwest_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] - num
+      new_col = index[1] - num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_northeast_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] - num
+      new_col = index[1] + num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_southwest_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] + num
+      new_col = index[1] - num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_southeast_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] + num
+      new_col = index[1] + num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_north_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] - num
+      new_col = index[1]
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_south_movement(row, col, index, gamepiece)
+    (1...row.abs).each do |num|
+      new_row = index[0] + num
+      new_col = index[1]
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_east_movement(row, col, index, gamepiece)
+    (1...col.abs).each do |num|
+      new_row = index[0]
+      new_col = index[1] + num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
+
+  def simulate_west_movement(row, col, index, gamepiece)
+    (1...col.abs).each do |num|
+      new_row = index[0]
+      new_col = index[1] - num
+      if @board[new_row][new_col] == "-"
+        next
+      elsif gamepiece.color == @board[new_row][new_col].color
+        puts "Ally piece in the way. Cannot execute move."
+        return false
+      else
+        puts "Enemy piece in the way. Cannot execute move."
+        return false
+      end
+    end
+  end
 end

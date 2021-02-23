@@ -13,50 +13,50 @@ class Bishop
   def moves(location, moves = [])    
     row = location[0]
     col = location[1]
-    diagonal_top_left(row, col, moves)
-    diagonal_top_right(row, col, moves)
-    diagonal_bot_left(row, col, moves)
-    diagonal_bot_right(row, col, moves)
+    northwest_moves(row, col, moves)
+    northeast_moves(row, col, moves)
+    southwest_moves(row, col, moves)
+    southeast_moves(row, col, moves)
 
     moves
   end
 
-  def diagonal_top_left(row, col, moves)
+  def northwest_moves(row, col, moves)
     return if invalid_move?([row - 1, col - 1])
 
     moves << [row - 1, col - 1]
 
-    diagonal_top_left(row - 1, col - 1, moves)
+    northwest_moves(row - 1, col - 1, moves)
     
     return moves 
   end
 
-  def diagonal_top_right(row, col, moves)
+  def northeast_moves(row, col, moves)
     return if invalid_move?([row - 1, col + 1])
 
     moves << [row - 1, col + 1]
 
-    diagonal_top_right(row - 1, col + 1, moves)
+    northeast_moves(row - 1, col + 1, moves)
 
     return moves
   end
 
-  def diagonal_bot_left(row, col, moves)
+  def southwest_moves(row, col, moves)
     return if invalid_move?([row + 1, col - 1])
 
     moves << [row + 1, col - 1]
 
-    diagonal_bot_left(row + 1, col - 1, moves)
+    southwest_moves(row + 1, col - 1, moves)
 
     return moves
   end
 
-  def diagonal_bot_right(row, col, moves)
+  def southeast_moves(row, col, moves)
     return if invalid_move?([row + 1, col + 1])
 
     moves << [row + 1, col + 1]
 
-    diagonal_bot_right(row + 1, col + 1, moves)
+    southeast_moves(row + 1, col + 1, moves)
 
     return moves
   end
