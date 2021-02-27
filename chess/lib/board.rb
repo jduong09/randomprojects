@@ -36,6 +36,7 @@ class Board
         directions.each do |direction|
           row = input[0] + direction[0]
           col = input[1] + direction[1]
+          next if invalid_move?([row, col])
           move = index_to_rank([row, col])
           coordinates << move if enemy_spot?(gamepiece.color, move)
         end
@@ -44,6 +45,7 @@ class Board
         directions.each do |direction|
           row = input[0] + direction[0]
           col = input[1] + direction[1]
+          next if invalid_move?([row, col])
           move = index_to_rank([row, col])
           coordinates << move if enemy_spot?(gamepiece.color, move)
         end
@@ -93,16 +95,20 @@ class Board
   def move_gamepiece(old_location, new_location, gamepiece)
     new_spot = get_rank_and_file(new_location)
 
+    if gamepiece.name == "P" && en_passant?(gamepiece) != false
+      dead_gamepiece = en_passant?(gamepiece)
+      remove_gamepiece(gamepiece, dead_gamepiece)
+      change_board(dead_gamepiece, "-")
+    end
+
     change_board(old_location, "-")
     change_board(new_location, gamepiece)
-
+    gamepiece.change_location(new_location)
     display_board
   end
 
   def remove_gamepiece(gamepiece, move)
     dead_gamepiece = find_gamepiece(move)
-    move_gamepiece(gamepiece.location, move, gamepiece)
-    gamepiece.change_location(move)
     dead_gamepiece.change_location("dead")
     
     display_board
@@ -115,6 +121,17 @@ class Board
   def valid_move?(gamepiece, index, new_location)
     possible_moves = gamepiece_moves(gamepiece, index)
     new_spot = get_rank_and_file(new_location)
+
+    if gamepiece.name == "P" && en_passant?(gamepiece) != false
+      enemy_index = get_rank_and_file(en_passant?(gamepiece))
+      if gamepiece.color == "white"
+        passing_move = [enemy_index[0] - 1, enemy_index[1]]
+        possible_moves << index_to_rank(passing_move)
+      else
+        passing_move = [enemy_index[0] + 1, enemy_index[1]]
+        possible_moves << index_to_rank(passing_move)
+      end
+    end
 
     if gamepiece.name == "P" && enemy_spot?(gamepiece.color, new_location)
       row = new_spot[0] - index[0]
@@ -189,6 +206,31 @@ class Board
       return true
     end
   end
+
+  # The capturing pawn must be on its fifth rank;
+  # The capture can only be made on the move immediately after the enemy pawn makes the double-step move; 
+  # Otherwise, the right to capture it en passant is lost.
+  def en_passant?(capturing_pawn)
+    #The capturing pawn must be on its fifth rank
+    current_location = get_rank_and_file(capturing_pawn.location)
+    first_location = get_rank_and_file(capturing_pawn.game_moves[0])
+    #The captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move);
+    if (current_location[0] - first_location[0]).abs == 3
+      left_spot = @board[current_location[0]][current_location[1] - 1]
+      right_spot = @board[current_location[0]][current_location[1] + 1]
+      if !left_spot.instance_of?(String)
+        return left_spot.location 
+      elsif !right_spot.instance_of?(String)
+        return right_spot.location
+      else
+        false
+      end
+    else
+      return false
+    end
+  end
+
+  private
 
   def enemy_spot?(color, move)
     index = get_rank_and_file(move)
@@ -387,4 +429,15 @@ class Board
       end
     end
   end
+
+  def invalid_move?(move)
+    if move[0] < 1 || move[0] > 8
+      return true
+    elsif move[1] < 1 || move[1] > 8
+      return true
+    else
+      return false
+    end
+  end
+
 end

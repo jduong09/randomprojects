@@ -72,9 +72,9 @@ class Game
   def execute_move(gamepiece, move)
     if @board.find_gamepiece(move) == "-"
       @board.move_gamepiece(gamepiece.location, move, gamepiece)
-      gamepiece.change_location(move)
     else
       @board.remove_gamepiece(gamepiece, move)
+      @board.move_gamepiece(gamepiece.location, move, gamepiece)
     end
   end
 

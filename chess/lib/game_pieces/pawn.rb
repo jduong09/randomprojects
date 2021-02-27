@@ -1,12 +1,12 @@
 class Pawn
-  attr_reader :icon, :color, :location, :name
+  attr_reader :icon, :color, :location, :name, :game_moves
   
   def initialize(color, location)
     @name = "P"
     @color = color
     @location = location
     @icon = @color == "white" ? "\u2659" : "\u265F"
-    @game_moves = []
+    @game_moves = [@location]
   end
 
   #Pawn can always go one forward as long as there is an open space.
@@ -16,7 +16,7 @@ class Pawn
   def moves(location, moves = [])
     if @color == "white" 
       #if the pawn has not move, it can move 2 spaces forward.
-      if @game_moves.empty?
+      if @game_moves.length == 1
         direction = [location[0] - 2, location[1]]
         return if invalid_move?(direction)
         moves << direction
@@ -28,7 +28,7 @@ class Pawn
       moves << [row, col]
     else
 
-      if @game_moves.empty?
+      if @game_moves.length == 1
         direction = [location[0] + 2, location[1]]
         return if invalid_move?(direction)
         moves << direction
