@@ -24,18 +24,43 @@ class Board
     display_board
   end
 
-  #castling. Separate method?
-  def gamepiece_moves(gamepiece, input)
-    all_moves = gamepiece.moves(input)
+  def gamepiece_moves(gamepiece, index)
+    all_moves = gamepiece.moves(index)
+
+    #lines 30 - 53 check if the bishop, queen, and rook have possible moves. if not, returns empty array.
+    if gamepiece.name == "B"
+      bishop_moves = []
+      all_moves.each do |move| 
+        bishop_moves << move if validate_bishop_move(gamepiece, index, move)
+      end
+      return bishop_moves
+    end
+
+    if gamepiece.name == "Q"
+      queen_moves = []
+      all_moves.each do |move| 
+        queen_moves << move if validate_queen_move(gamepiece, index, move)
+      end
+      return queen_moves
+    end
+
+    if gamepiece.name == "R"
+      rook_moves = []
+      all_moves.each do |move| 
+        rook_moves << move if validate_rook_move(gamepiece, index, move)
+      end
+      return rook_moves
+    end
 
     coordinates = all_moves.map { |move| index_to_rank(move) } 
     
+    #Adds the diagonal killing moves for pawns if it is available to diagonal kill.
     if gamepiece.name == "P" 
       if gamepiece.color == "white"
         directions = [[-1, -1], [-1, 1]]
         directions.each do |direction|
-          row = input[0] + direction[0]
-          col = input[1] + direction[1]
+          row = index[0] + direction[0]
+          col = index[1] + direction[1]
           next if invalid_move?([row, col])
           move = index_to_rank([row, col])
           coordinates << move if enemy_spot?(gamepiece.color, move)
@@ -43,14 +68,15 @@ class Board
       elsif gamepiece.color == "black"
         directions = [[1, -1], [1, 1]]
         directions.each do |direction|
-          row = input[0] + direction[0]
-          col = input[1] + direction[1]
+          row = index[0] + direction[0]
+          col = index[1] + direction[1]
           next if invalid_move?([row, col])
           move = index_to_rank([row, col])
           coordinates << move if enemy_spot?(gamepiece.color, move)
         end
       end
     end
+
     coordinates
   end
 
@@ -120,6 +146,7 @@ class Board
   #Therefore, make sure it is in the possible move array and that it doesn't land onto an ally spot.
   def valid_move?(gamepiece, index, new_location)
     possible_moves = gamepiece_moves(gamepiece, index)
+    return false if possible_moves.empty?
     new_spot = get_rank_and_file(new_location)
 
     if gamepiece.name == "P" && en_passant?(gamepiece) != false
@@ -142,63 +169,17 @@ class Board
       end
     end
 
-    if gamepiece.name == "B" 
-      #this subtraction is done so we can see how far and what direction the new piece is in relation to the current position.
-      row = new_spot[0] - index[0]
-      col = new_spot[1] - index[1]
-      if row.negative? && col.negative? #forward diagonal left [-1, -1]
-        simulate_northwest_movement(row, col, index, gamepiece)
-      elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
-        simulate_northeast_movement(row, col, index, gamepiece)
-      elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
-        simulate_southwest_movement(row, col, index, gamepiece)
-      else #downward diagonal right [1,1]
-        simulate_southeast_movement(row, col, index, gamepiece)
-      end
-    end
+    #validate_bishop_move(gamepiece, index, new_spot) if gamepiece.name == "B"
 
-    if gamepiece.name == "R" 
-      #this subtraction is done so we can see how far and what direction the new piece is in relation to the current position.
-      row = new_spot[0] - index[0]
-      col = new_spot[1] - index[1]
-      if row.negative? && col == 0 #north [-1, 0]
-        simulate_north_movement(row, col, index, gamepiece)
-      elsif !row.negative? && col == 0 #south [1, 0]
-        simulate_south_movement(row, col, index, gamepiece)
-      elsif col.negative? && row == 0 #west [0, -1]
-        simulate_west_movement(row, col, index, gamepiece)
-      else #east [0, 1]
-        simulate_east_movement(row, col, index, gamepiece)
-      end
-    end
+    #validate_rook_move(gamepiece, index, new_spot) if gamepiece.name == "R"
 
-    if gamepiece.name == "Q"
-      row = new_spot[0] - index[0]
-      col = new_spot[1] - index[1]
-      if row.negative? && col == 0 #north [-1, 0]
-        simulate_north_movement(row, col, index, gamepiece)
-      elsif !row.negative? && col == 0 #south [1, 0]
-        simulate_south_movement(row, col, index, gamepiece)
-      elsif col.negative? && row == 0 #west [0, -1]
-        simulate_west_movement(row, col, index, gamepiece)
-      elsif !col.negative? && row == 0 #east [0, 1]
-        simulate_east_movement(row, col, index, gamepiece)
-      elsif row.negative? && col.negative? #forward diagonal left [-1, -1]
-        simulate_northwest_movement(row, col, index, gamepiece)
-      elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
-        simulate_northeast_movement(row, col, index, gamepiece)
-      elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
-        simulate_southwest_movement(row, col, index, gamepiece)
-      else #downward diagonal right [1,1]
-        simulate_southeast_movement(row, col, index, gamepiece)
-      end
-    end
+    #validate_queen_move(gamepiece, index, new_spot) if gamepiece.name == "Q"
 
-    if @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
-      return true
-    elsif !possible_moves.include?(new_location)
+    if !possible_moves.include?(new_location)
       puts "That move is impossible for #{gamepiece.icon}."
       return false
+    elsif @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
+      return true
     elsif gamepiece.color == @board[new_spot[0]][new_spot[1]].color
       puts "Placement of gamepiece on ally piece. Select a valid location for your #{gamepiece.icon}."
       return false
@@ -207,27 +188,70 @@ class Board
     end
   end
 
-  # The capturing pawn must be on its fifth rank;
-  # The capture can only be made on the move immediately after the enemy pawn makes the double-step move; 
-  # Otherwise, the right to capture it en passant is lost.
-  def en_passant?(capturing_pawn)
-    #The capturing pawn must be on its fifth rank
-    current_location = get_rank_and_file(capturing_pawn.location)
-    first_location = get_rank_and_file(capturing_pawn.game_moves[0])
-    #The captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move);
-    if (current_location[0] - first_location[0]).abs == 3
-      left_spot = @board[current_location[0]][current_location[1] - 1]
-      right_spot = @board[current_location[0]][current_location[1] + 1]
-      if !left_spot.instance_of?(String)
-        return left_spot.location 
-      elsif !right_spot.instance_of?(String)
-        return right_spot.location
-      else
-        false
+  # The castling must be kingside or queenside.
+  # Neither the king nor the chosen rook has previously moved.
+    # compare current king/rook location with the first location it should be at. (done)
+      # b-king is at e-8, w-king is at e-1 (done)
+      # w-rook is at a-1 and h-1, b-rook is at a-8 and h-8 (done)
+  # There are no pieces between the king and the chosen rook. (done)
+    # look at the 3(queenside) or 2(kingside) spaces for "-". (done)
+      # use simulate movement? (done)
+  # King may not castle out of, through, or into check.
+    # Need to see if any pieces are being attacked by the enemy team.
+      # Need to know enemies next possible moves. 
+        # Data structure to hold this information.
+    # Check each of the pieces that are about to be traversed by the king. 
+      # if they aren't, then castling is available.
+  # Implement the castling movement
+      def castling(king, rook)
+        if king.color == "white"
+          return false if king.location != "e1"
+          king_index = get_rank_and_file(king.location)
+          if rook.location == "a1"
+            return false if simulate_west_movement(0, 3, king_index, king) == false
+            return "no pieces in the way"
+          elsif rook.location == "h1"
+            return false if simulate_east_movement(0, 2, king_index, king) == false
+            return "no pieces in the way"
+          else
+            return false
+          end
+        elsif king.color == "black"
+          return false if king.location != "e8"
+          king_index = get_rank_and_file(king.location)
+          if rook.location == "a8"
+            return false if simulate_west_movement(0, 3, king_index, king) == false
+            return "no pieces in the way"
+          elsif rook.location == "h8"
+            return false if simulate_east_movement(0, 2, king_index, king) == false
+            return "no pieces in the way"
+          else
+            return false
+          end
+        else
+          return false
+        end
       end
-    else
-      return false
+
+  # Need to see if any pieces are being attacked by the enemy team.
+    # Need to know enemies next possible moves. 
+      # Check each enemy pieces possible moves.
+        # If king castles on to one of the possible moves, castling is not available.
+        # Otherwise, castling is available, and can execute the castle.
+
+  def enemy_moves(color)
+    possible_moves = []
+    @gamepieces[color].each_value do |piece_type|
+      piece_type.each do |piece|
+        next if piece.location == "dead"
+        index = get_rank_and_file(piece.location)
+        all_moves = gamepiece_moves(piece, index)
+        all_moves.each do |move|
+          possible_moves << [piece, move] if valid_move?(piece, index, move)
+        end
+      end
     end
+    possible_moves
   end
 
   private
@@ -302,132 +326,174 @@ class Board
     @board[rank][file] = element
   end
 
+  def validate_bishop_move(bishop, index, move)
+    row = move[0] - index[0]
+    col = move[1] - index[1]
+    if row.negative? && col.negative? #forward diagonal left [-1, -1]
+      simulate_northwest_movement(row, col, index, bishop)
+    elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
+      simulate_northeast_movement(row, col, index, bishop)
+    elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
+      simulate_southwest_movement(row, col, index, bishop)
+    else #downward diagonal right [1,1]
+      simulate_southeast_movement(row, col, index, bishop)
+    end
+  end
+
+  def validate_rook_move(rook, index, move)
+    row = move[0] - index[0]
+    col = move[1] - index[1]
+    if row.negative? && col == 0 #north [-1, 0]
+      simulate_north_movement(row, col, index, rook)
+    elsif !row.negative? && col == 0 #south [1, 0]
+      simulate_south_movement(row, col, index, rook)
+    elsif col.negative? && row == 0 #west [0, -1]
+      simulate_west_movement(row, col, index, rook)
+    else #east [0, 1]
+      simulate_east_movement(row, col, index, rook)
+    end
+  end
+
+  def validate_queen_move(queen, index, move) 
+    row = move[0] - index[0]
+    col = move[1] - index[1]
+    if row.negative? && col == 0 #north [-1, 0]
+      simulate_north_movement(row, col, index, queen)
+    elsif !row.negative? && col == 0 #south [1, 0]
+      simulate_south_movement(row, col, index, queen)
+    elsif col.negative? && row == 0 #west [0, -1]
+      simulate_west_movement(row, col, index, queen)
+    elsif !col.negative? && row == 0 #east [0, 1]
+      simulate_east_movement(row, col, index, queen)
+    elsif row.negative? && col.negative? #forward diagonal left [-1, -1]
+      simulate_northwest_movement(row, col, index, queen)
+    elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
+      simulate_northeast_movement(row, col, index, queen)
+    elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
+      simulate_southwest_movement(row, col, index, queen)
+    else #downward diagonal right [1,1]
+      simulate_southeast_movement(row, col, index, queen)
+    end
+  end
+
   def simulate_northwest_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_northeast_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_southwest_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_southeast_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_north_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1]
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_south_movement(row, col, index, gamepiece)
-    (1...row.abs).each do |num|
+    (1..row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1]
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_east_movement(row, col, index, gamepiece)
-    (1...col.abs).each do |num|
+    (1..col.abs).each do |num|
       new_row = index[0]
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def simulate_west_movement(row, col, index, gamepiece)
-    (1...col.abs).each do |num|
+    (1..col.abs).each do |num|
       new_row = index[0]
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
         next
       elsif gamepiece.color == @board[new_row][new_col].color
-        puts "Ally piece in the way. Cannot execute move."
         return false
       else
-        puts "Enemy piece in the way. Cannot execute move."
         return false
       end
     end
+    true
   end
 
   def invalid_move?(move)
@@ -435,6 +501,29 @@ class Board
       return true
     elsif move[1] < 1 || move[1] > 8
       return true
+    else
+      return false
+    end
+  end
+
+  # The capturing pawn must be on its fifth rank;
+  # The capture can only be made on the move immediately after the enemy pawn makes the double-step move; 
+  # Otherwise, the right to capture it en passant is lost.
+  def en_passant?(capturing_pawn)
+    #The capturing pawn must be on its fifth rank
+    current_location = get_rank_and_file(capturing_pawn.location)
+    first_location = get_rank_and_file(capturing_pawn.game_moves[0])
+    #The captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move);
+    if (current_location[0] - first_location[0]).abs == 3
+      left_spot = @board[current_location[0]][current_location[1] - 1]
+      right_spot = @board[current_location[0]][current_location[1] + 1]
+      if !left_spot.instance_of?(String)
+        return left_spot.location 
+      elsif !right_spot.instance_of?(String)
+        return right_spot.location
+      else
+        false
+      end
     else
       return false
     end
