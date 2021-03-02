@@ -39,7 +39,7 @@ class Board
     if gamepiece.name == "Q"
       queen_moves = []
       all_moves.each do |move| 
-        queen_moves << move if validate_queen_move(gamepiece, index, move)
+        queen_moves << move if validate_queen_king_move(gamepiece, index, move)
       end
       return queen_moves
     end
@@ -52,18 +52,31 @@ class Board
       return rook_moves
     end
 
-    coordinates = all_moves.map { |move| index_to_rank(move) } 
+    if gamepiece.name == "K"
+      king_moves = []
+      all_moves.each do |move|
+        king_moves << move if validate_queen_king_move(gamepiece, index, move)
+      end
+      return king_moves
+    end
     
     #Adds the diagonal killing moves for pawns if it is available to diagonal kill.
+    #Adds the en passant moves if en passant condition is reached.
     if gamepiece.name == "P" 
+      pawn_moves = []
+
+      all_moves.each do |move|
+        pawn_moves << move if validate_pawn_move(gamepiece, index, move)
+      end
+
       if gamepiece.color == "white"
         directions = [[-1, -1], [-1, 1]]
         directions.each do |direction|
           row = index[0] + direction[0]
           col = index[1] + direction[1]
           next if invalid_move?([row, col])
-          move = index_to_rank([row, col])
-          coordinates << move if enemy_spot?(gamepiece.color, move)
+          move = [row, col]
+          pawn_moves << move if enemy_spot?(gamepiece.color, move)
         end
       elsif gamepiece.color == "black"
         directions = [[1, -1], [1, 1]]
@@ -71,13 +84,35 @@ class Board
           row = index[0] + direction[0]
           col = index[1] + direction[1]
           next if invalid_move?([row, col])
-          move = index_to_rank([row, col])
-          coordinates << move if enemy_spot?(gamepiece.color, move)
+          move = [row, col]
+          pawn_moves << move if enemy_spot?(gamepiece.color, move)
         end
       end
+
+      if en_passant?(gamepiece) != false
+        enemy_index = get_rank_and_file(en_passant?(gamepiece))
+        if gamepiece.color == "white"
+          passing_move = [enemy_index[0] - 1, enemy_index[1]]
+          pawn_moves << passing_move
+        else
+          passing_move = [enemy_index[0] + 1, enemy_index[1]]
+          pawn_moves << passing_move
+        end
+      end
+      
+      return pawn_moves
     end
 
-    coordinates
+    return all_moves
+  end
+
+  def possible_moves?(gamepiece)
+    index = get_rank_and_file(gamepiece.location)
+    if gamepiece_moves(gamepiece, index).empty?
+      return false
+    else
+      return true
+    end
   end
 
   def [](row, col)
@@ -149,36 +184,10 @@ class Board
     return false if possible_moves.empty?
     new_spot = get_rank_and_file(new_location)
 
-    if gamepiece.name == "P" && en_passant?(gamepiece) != false
-      enemy_index = get_rank_and_file(en_passant?(gamepiece))
-      if gamepiece.color == "white"
-        passing_move = [enemy_index[0] - 1, enemy_index[1]]
-        possible_moves << index_to_rank(passing_move)
-      else
-        passing_move = [enemy_index[0] + 1, enemy_index[1]]
-        possible_moves << index_to_rank(passing_move)
-      end
-    end
-
-    if gamepiece.name == "P" && enemy_spot?(gamepiece.color, new_location)
-      row = new_spot[0] - index[0]
-      col = new_spot[1] - index[1]
-      if [row, col] == [1, 0] || [row, col] == [-1, 0]
-        puts "That move is not possible for the pawn."
-        return false
-      end
-    end
-
-    #validate_bishop_move(gamepiece, index, new_spot) if gamepiece.name == "B"
-
-    #validate_rook_move(gamepiece, index, new_spot) if gamepiece.name == "R"
-
-    #validate_queen_move(gamepiece, index, new_spot) if gamepiece.name == "Q"
-
-    if !possible_moves.include?(new_location)
+    if !possible_moves.include?(new_spot)
       puts "That move is impossible for #{gamepiece.icon}."
       return false
-    elsif @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_location)
+    elsif @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_spot)
       return true
     elsif gamepiece.color == @board[new_spot[0]][new_spot[1]].color
       puts "Placement of gamepiece on ally piece. Select a valid location for your #{gamepiece.icon}."
@@ -257,9 +266,8 @@ class Board
   private
 
   def enemy_spot?(color, move)
-    index = get_rank_and_file(move)
     enemy_color = color == "white" ? "black" : "white"
-    new_spot = @board[index[0]][index[1]]
+    new_spot = @board[move[0]][move[1]]
     
     if new_spot.instance_of?(String)
       return false
@@ -354,30 +362,68 @@ class Board
     end
   end
 
-  def validate_queen_move(queen, index, move) 
+  def validate_queen_king_move(gamepiece, index, move) 
     row = move[0] - index[0]
     col = move[1] - index[1]
     if row.negative? && col == 0 #north [-1, 0]
-      simulate_north_movement(row, col, index, queen)
+      simulate_north_movement(row, col, index, gamepiece)
     elsif !row.negative? && col == 0 #south [1, 0]
-      simulate_south_movement(row, col, index, queen)
+      simulate_south_movement(row, col, index, gamepiece)
     elsif col.negative? && row == 0 #west [0, -1]
-      simulate_west_movement(row, col, index, queen)
+      simulate_west_movement(row, col, index, gamepiece)
     elsif !col.negative? && row == 0 #east [0, 1]
-      simulate_east_movement(row, col, index, queen)
+      simulate_east_movement(row, col, index, gamepiece)
     elsif row.negative? && col.negative? #forward diagonal left [-1, -1]
-      simulate_northwest_movement(row, col, index, queen)
+      simulate_northwest_movement(row, col, index, gamepiece)
     elsif row.negative? && !col.negative? #forward diagonal right [-1, 1]
-      simulate_northeast_movement(row, col, index, queen)
+      simulate_northeast_movement(row, col, index, gamepiece)
     elsif !row.negative? && col.negative? #downward diagonal left [1, -1]
-      simulate_southwest_movement(row, col, index, queen)
+      simulate_southwest_movement(row, col, index, gamepiece)
     else #downward diagonal right [1,1]
-      simulate_southeast_movement(row, col, index, queen)
+      simulate_southeast_movement(row, col, index, gamepiece)
+    end
+  end
+
+  #pawn's move are one move forward unless it is first turn (2 moves forward) or they are attacking (forward diagonal)
+  def validate_pawn_move(pawn, index, move)
+   
+    if enemy_spot?(pawn.color, move)
+      row = move[0] - index[0]
+      col = move[1] - index[1]
+      if [row, col] == [1, 0] || [row, col] == [-1, 0]
+        return false
+      end
+    end
+
+    row = move[0] - index[0]
+    col = move[1] - index[1]
+    if pawn.color == "white"
+      simulate_north_movement(row, col, index, pawn)
+    else 
+      simulate_south_movement(row, col, index, pawn)
     end
   end
 
   def simulate_northwest_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    # From starting location UP to final location, this checks to see if there are any enemy pieces or ally pieces in the way.
+    # If there are, it will return false, and the movement is not valid
+    # If we just need to move one spot, then we need a separate case because the range will not include 1 using ... when the condition is 1...1
+    # 1...1 goes from 1 up to and not including 1 therefore.
+    if row == -1
+      new_row = index[0] - 1
+      new_col = index[1] - 1
+      if @board[new_row][new_col] == "-"
+        return true
+      #If there is an ally on the spot, return false; Invalid move.
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      #Else, the spot is nothing or it is an enemy; Valid move.
+      else
+        return true
+      end
+    end
+    
+    (1...row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
@@ -388,11 +434,24 @@ class Board
         return false
       end
     end
+    # Need to check if the final location is an enemy. If it is, then the move is valid, and can execute removal of enemy piece.
     true
   end
 
   def simulate_northeast_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    if row == -1
+      new_row = index[0] - 1
+      new_col = index[1] + 1
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
@@ -407,7 +466,19 @@ class Board
   end
 
   def simulate_southwest_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    if row == 1
+      new_row = index[0] + 1
+      new_col = index[1] - 1
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
@@ -422,7 +493,19 @@ class Board
   end
 
   def simulate_southeast_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    if row == 1
+      new_row = index[0] + 1
+      new_col = index[1] + 1
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
@@ -437,7 +520,19 @@ class Board
   end
 
   def simulate_north_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    if row == -1
+      new_row = index[0] - 1
+      new_col = index[1]
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...row.abs).each do |num|
       new_row = index[0] - num
       new_col = index[1]
       if @board[new_row][new_col] == "-"
@@ -452,7 +547,19 @@ class Board
   end
 
   def simulate_south_movement(row, col, index, gamepiece)
-    (1..row.abs).each do |num|
+    if row == 1
+      new_row = index[0] + 1
+      new_col = index[1]
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...row.abs).each do |num|
       new_row = index[0] + num
       new_col = index[1]
       if @board[new_row][new_col] == "-"
@@ -467,7 +574,19 @@ class Board
   end
 
   def simulate_east_movement(row, col, index, gamepiece)
-    (1..col.abs).each do |num|
+    if col == 1
+      new_row = index[0]
+      new_col = index[1] + 1
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...col.abs).each do |num|
       new_row = index[0]
       new_col = index[1] + num
       if @board[new_row][new_col] == "-"
@@ -482,7 +601,19 @@ class Board
   end
 
   def simulate_west_movement(row, col, index, gamepiece)
-    (1..col.abs).each do |num|
+    if col == -1
+      new_row = index[0]
+      new_col = index[1] - 1
+      if @board[new_row][new_col] == "-"
+        return true
+      elsif gamepiece.color == @board[new_row][new_col].color
+        return false
+      else
+        return true
+      end
+    end
+
+    (1...col.abs).each do |num|
       new_row = index[0]
       new_col = index[1] - num
       if @board[new_row][new_col] == "-"
@@ -517,9 +648,9 @@ class Board
     if (current_location[0] - first_location[0]).abs == 3
       left_spot = @board[current_location[0]][current_location[1] - 1]
       right_spot = @board[current_location[0]][current_location[1] + 1]
-      if !left_spot.instance_of?(String)
+      if !left_spot.instance_of?(String) && left_spot.game_moves.length == 2
         return left_spot.location 
-      elsif !right_spot.instance_of?(String)
+      elsif !right_spot.instance_of?(String) && right_spot.game_moves.length == 2
         return right_spot.location
       else
         false

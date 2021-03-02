@@ -54,9 +54,13 @@ class Game
       location = gets.chomp
       gamepiece = @board.find_gamepiece(location)
 
-      return gamepiece unless gamepiece.nil? || gamepiece == "-" || correct_color?(player, gamepiece) == false
-
-      puts "Incorrect location of piece. Choose again."
+      if gamepiece.nil? || gamepiece == "-" || correct_color?(player, gamepiece) == false
+        puts "Incorrect location of piece. Choose again."
+      elsif @board.possible_moves?(gamepiece) == false
+        puts "This gamepiece has no available moves."
+      else
+        return gamepiece
+      end
     end
   end
 
