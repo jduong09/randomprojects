@@ -190,7 +190,6 @@ class Board
     elsif @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_spot)
       return true
     elsif gamepiece.color == @board[new_spot[0]][new_spot[1]].color
-      puts "Placement of gamepiece on ally piece. Select a valid location for your #{gamepiece.icon}."
       return false
     else
       return true
@@ -207,21 +206,29 @@ class Board
       # use simulate movement? (done)
   # King may not castle out of, through, or into check.
     # Need to see if any pieces are being attacked by the enemy team.
-      # Need to know enemies next possible moves. 
-        # Data structure to hold this information.
+      # Need to know enemies next possible moves. (done)
+        # Data structure to hold this information. (array lol)
     # Check each of the pieces that are about to be traversed by the king. 
       # if they aren't, then castling is available.
   # Implement the castling movement
+    #queenside
+      #white king goes from e1 --> c1
+      #white rook goes from a1 --> d1
+    #kingside
+      #white king goes from e1 --> g1
+      #white rook goes from h1 --> f1
       def castling(king, rook)
         if king.color == "white"
           return false if king.location != "e1"
           king_index = get_rank_and_file(king.location)
           if rook.location == "a1"
-            return false if simulate_west_movement(0, 3, king_index, king) == false
-            return "no pieces in the way"
+            return false if simulate_west_movement(0, 4, king_index, king) == false
+            return false if safe_castle?("queenside", king.color) == false
+            return "castle available" if safe_castle?("queenside", king.color)
           elsif rook.location == "h1"
-            return false if simulate_east_movement(0, 2, king_index, king) == false
-            return "no pieces in the way"
+            return false if simulate_east_movement(0, 3, king_index, king) == false
+            return false if safe_castle?("kingside", king.color) == false
+            return "castle available" if safe_castle?("kingside", king.color)
           else
             return false
           end
@@ -229,11 +236,13 @@ class Board
           return false if king.location != "e8"
           king_index = get_rank_and_file(king.location)
           if rook.location == "a8"
-            return false if simulate_west_movement(0, 3, king_index, king) == false
-            return "no pieces in the way"
+            return false if simulate_west_movement(0, 4, king_index, king) == false
+            return false if safe_castle?("queenside", king.color) == false
+            return "castle available" if safe_castle?("queenside", king.color)
           elsif rook.location == "h8"
-            return false if simulate_east_movement(0, 2, king_index, king) == false
-            return "no pieces in the way"
+            return false if simulate_east_movement(0, 3, king_index, king) == false
+            return false if safe_castle?("kingside", king.color) == false
+            return "castle available" if safe_castle?("kingside", king.color)
           else
             return false
           end
@@ -244,23 +253,85 @@ class Board
 
   # Need to see if any pieces are being attacked by the enemy team.
     # Need to know enemies next possible moves. 
-      # Check each enemy pieces possible moves.
+      # Check each enemy pieces possible moves. (done)
         # If king castles on to one of the possible moves, castling is not available.
         # Otherwise, castling is available, and can execute the castle.
 
-  def enemy_moves(color)
+  def enemy_moves(enemy_color)
     possible_moves = []
-    @gamepieces[color].each_value do |piece_type|
+    @gamepieces[enemy_color].each_value do |piece_type|
       piece_type.each do |piece|
         next if piece.location == "dead"
         index = get_rank_and_file(piece.location)
         all_moves = gamepiece_moves(piece, index)
         all_moves.each do |move|
-          possible_moves << [piece, move] if valid_move?(piece, index, move)
+          chess_move = index_to_rank(move)
+          possible_moves << move if valid_move?(piece, index, chess_move)
         end
       end
     end
     possible_moves
+  end
+
+  # Check each of the pieces that are about to be traversed by the king. 
+    # if they aren't, then castling is available.
+    # create a method that will take in a location and ally color, and check if it is being attacked by the enemy.
+  def safe_location?(location, ally_color)
+    enemy_color = ally_color == "white" ? "black" : "white"
+    enemy_possible_moves = enemy_moves(enemy_color)
+    if enemy_possible_moves.include?(location)
+      return false
+    else
+      return true
+    end
+  end
+
+  def safe_castle?(castle_type, king_color)
+    if king_color == "white"
+      if castle_type == "queenside"
+        king_moves = ["e1", "d1", "c1"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      else
+        king_moves = ["e1", "f1", "g1"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      end
+    else
+      if castle_type == "queenside"
+        king_moves = ["e8", "d8", "c8"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      else
+        king_moves = ["e8", "f8", "g8"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      end
+    end
   end
 
   private
@@ -648,10 +719,18 @@ class Board
     if (current_location[0] - first_location[0]).abs == 3
       left_spot = @board[current_location[0]][current_location[1] - 1]
       right_spot = @board[current_location[0]][current_location[1] + 1]
-      if !left_spot.instance_of?(String) && left_spot.game_moves.length == 2
-        return left_spot.location 
-      elsif !right_spot.instance_of?(String) && right_spot.game_moves.length == 2
-        return right_spot.location
+      if !left_spot.instance_of?(String) && left_spot.name == "P"
+        if left_spot.game_moves.length == 2
+          return left_spot.location 
+        else
+          return false
+        end
+      elsif !right_spot.instance_of?(String) && right_spot.name == "P"
+        if right_spot.game_moves.length == 2
+          return right_spot.location
+        else
+          return false
+        end
       else
         false
       end
