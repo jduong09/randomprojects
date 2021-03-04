@@ -1,11 +1,12 @@
 class King
-  attr_reader :icon, :color, :location, :name
-  
+  attr_reader :icon, :color, :location, :name, :game_moves
+
   def initialize(color)
     @name = "K"
     @color = color
     @location = @color == "white" ? "e1" : "e8"
     @icon = @color == "white" ? "\u2654" : "\u265A"
+    @game_moves = [@location]
   end
 
   def moves(location, moves = [])
@@ -34,5 +35,6 @@ class King
 
   def change_location(coordinates)
     @location = coordinates
+    @game_moves << coordinates
   end
 end

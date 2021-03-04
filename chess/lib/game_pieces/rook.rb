@@ -1,11 +1,12 @@
 class Rook
-  attr_reader :icon, :color, :location, :name
+  attr_reader :icon, :color, :location, :name, :game_moves
   
   def initialize(color, location)
     @name = "R"
     @color = color
     @location = location
     @icon = @color == "white" ? "\u2656" : "\u265C"
+    @game_moves = [@location]
   end
 
   def moves(location, moves = [])    
@@ -72,6 +73,7 @@ class Rook
 
   def change_location(coordinates)
     @location = coordinates
+    @game_moves << coordinates
   end
   
 end
