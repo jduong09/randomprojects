@@ -6,8 +6,7 @@ require_relative "game_pieces/queen.rb"
 require_relative "game_pieces/rook.rb"
 
 class Board
-  attr_accessor :board
-  attr_accessor :gamepieces
+  attr_accessor :board, :gamepieces
 
   def initialize
     @board = Array.new(8) { Array.new(8) {"-"} }
@@ -24,10 +23,20 @@ class Board
     display_board
   end
  
+  #Run the gamepieces moves method, which returns all available moves based on the gamepiece.
+  #Validate each move in respect to the board
+  #Returns empty array if no available moves.
   def gamepiece_moves(gamepiece, index)
     all_moves = gamepiece.moves(index)
 
-    #lines 30 - 53 check if the bishop, queen, and rook have possible moves. if not, returns empty array.
+    if gamepiece.name == "N"
+      knight_moves = []
+      all_moves.each do |move|
+        knight_moves << move if validate_knight_move(gamepiece, index, move)
+      end
+      return knight_moves
+    end
+
     if gamepiece.name == "B"
       bishop_moves = []
       all_moves.each do |move| 
@@ -59,15 +68,15 @@ class Board
       end
 
       #adding castling moves to king's possible moves
-      if gamepiece.game_moves.length == 1
-        if gamepiece.color == "white" 
-          king_moves << [8,3]
-          king_moves << [8,7]
-        else 
-          king_moves << [1,3]
-          king_moves << [1,7]
-        end
-      end
+      #if gamepiece.game_moves.length == 1
+        #if gamepiece.color == "white" 
+          #king_moves << [8,3]
+          #king_moves << [8,7]
+        #else 
+          #king_moves << [1,3]
+          #king_moves << [1,7]
+        #end
+      #end
       
       return king_moves
     end
@@ -118,15 +127,6 @@ class Board
     return all_moves
   end
 
-  def possible_moves?(gamepiece)
-    index = get_rank_and_file(gamepiece.location)
-    if gamepiece_moves(gamepiece, index).empty?
-      return false
-    else
-      return true
-    end
-  end
-
   def [](row, col)
     @board[row][col]
   end
@@ -175,13 +175,6 @@ class Board
     end
 
     # Implement the castling movement
-    #queenside
-      #white king goes from e1 --> c1
-      #white rook goes from a1 --> d1
-    #kingside
-      #white king goes from e1 --> g1
-      #white rook goes from h1 --> f1
-    #In castling, two gamepieces move.
     if gamepiece.name == "K" 
       if gamepiece.color == "white"
         if new_location == "c1"
@@ -223,53 +216,6 @@ class Board
     display_board
   end
 
-  #Once in every game, each king can make a special move, known as castling. Castling consists of moving the king two squares along the first rank toward a rook on the player's first rank, and then placing the rook on the last square that the king crossed. Castling is permissible if the following conditions are met:[1]
-    #Neither the king nor the rook has previously moved during the game.
-    #There are no pieces between the king and the rook.
-    #The king is not in check, and will not pass through or land on any square attacked by an enemy piece. (Note that castling is permitted if the rook is under attack, or if the rook crosses an attacked square.)
-    def castling?(king, rook)
-      if king.color == "white"
-        return false if king.location != "e1"
-        king_index = get_rank_and_file(king.location)
-        if rook.location == "a1"
-          return false if simulate_west_movement(0, 4, king_index, king) == false
-          return false if safe_castle?("queenside", king.color) == false
-          return true if safe_castle?("queenside", king.color)
-        elsif rook.location == "h1"
-          return false if simulate_east_movement(0, 3, king_index, king) == false
-          return false if safe_castle?("kingside", king.color) == false
-          return true if safe_castle?("kingside", king.color)
-        else
-          return false
-        end
-      elsif king.color == "black"
-        return false if king.location != "e8"
-        king_index = get_rank_and_file(king.location)
-        if rook.location == "a8"
-          return false if simulate_west_movement(0, 4, king_index, king) == false
-          return false if safe_castle?("queenside", king.color) == false
-          return true if safe_castle?("queenside", king.color)
-        elsif rook.location == "h8"
-          return false if simulate_east_movement(0, 3, king_index, king) == false
-          return false if safe_castle?("kingside", king.color) == false
-          return true if safe_castle?("kingside", king.color)
-        else
-          return false
-        end
-      else
-        return false
-      end
-    end
-
-  def execute_castling(king, rook, new_king_spot, new_rook_spot)
-    change_board(king.location, "-")
-    change_board(new_king_spot, king)
-    change_board(rook.location, "-")
-    change_board(new_rook_spot, rook)
-    king.change_location(new_king_spot)
-    rook.change_location(new_rook_spot)
-  end
-
   def remove_gamepiece(gamepiece, move)
     dead_gamepiece = find_gamepiece(move)
     dead_gamepiece.change_location("dead")
@@ -281,11 +227,22 @@ class Board
   #Also takes in new location that the gamepiece wants to be moved in, in rank/file notation
   #Making sure it is either in an open spot, or takes an enemy spot.
   #Therefore, make sure it is in the possible move array and that it doesn't land onto an ally spot.
+
+  #should validate that is correct.
+    #check if move can be made from all possible gamepiece moves. (done)
+    #check if move puts the gamepiece on a ally gamepiece (should not be able to do that) (done)
+    #check if move takes an enemies gamepiece (place, and remove enemies gamepiece from game.) (done)
+    #check if move places ally king in check (cannot make that move)
+      # Simulate the new board if the move were to be made. 
+      # Look at enemies moves, and see if they can place in check 
+        # This would mean enemy would get take king next turn. 
+
   def valid_move?(gamepiece, index, new_location)
     possible_moves = gamepiece_moves(gamepiece, index)
     return false if possible_moves.empty?
-    new_spot = get_rank_and_file(new_location)
 
+    new_spot = get_rank_and_file(new_location)
+    
     if !possible_moves.include?(new_spot)
       puts "That move is impossible for #{gamepiece.icon}."
       return false
@@ -296,35 +253,21 @@ class Board
     else
       return true
     end
+
   end
 
-  # The castling must be kingside or queenside.
-  # Neither the king nor the chosen rook has previously moved.
-    # compare current king/rook location with the first location it should be at. (done)
-      # b-king is at e-8, w-king is at e-1 (done)
-      # w-rook is at a-1 and h-1, b-rook is at a-8 and h-8 (done)
-  # There are no pieces between the king and the chosen rook. (done)
-    # look at the 3(queenside) or 2(kingside) spaces for "-". (done)
-      # use simulate movement? (done)
-  # King may not castle out of, through, or into check.
-    # Need to see if any pieces are being attacked by the enemy team.
-      # Need to know enemies next possible moves. (done)
-        # Data structure to hold this information. (array lol)
-    # Check each of the pieces that are about to be traversed by the king. (done)
-      # if they aren't, then castling is available. (done)
-  # Implement the castling movement
-    #queenside
-      #white king goes from e1 --> c1
-      #white rook goes from a1 --> d1
-    #kingside
-      #white king goes from e1 --> g1
-      #white rook goes from h1 --> f1
-
-  # Need to see if any pieces are being attacked by the enemy team.
-    # Need to know enemies next possible moves. 
-      # Check each enemy pieces possible moves. (done)
-        # If king castles on to one of the possible moves, castling is not available.
-        # Otherwise, castling is available, and can execute the castle.
+  def simulate_new_board(gamepiece, move)
+    old_location = gamepiece.location
+    move_gamepiece(gamepiece.location, move, gamepiece)
+    ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
+    if safe_location?(ally_king_location, gamepiece.color) == false
+      move_gamepiece(move, old_location, gamepiece)
+      return false
+    else
+      move_gamepiece(move, old_location, gamepiece)
+      return true
+    end
+  end
 
   def enemy_moves(enemy_color)
     possible_moves = []
@@ -355,63 +298,42 @@ class Board
     end
   end
 
-  def safe_castle?(castle_type, king_color)
-    if king_color == "white"
-      if castle_type == "queenside"
-        king_moves = ["e1", "d1", "c1"]
-        king_moves.each do |move|
-          index = get_rank_and_file(move)
-          if safe_location?(index, king_color) == false
-            return false
-            break
-          end
-        end
-        return true
-      else
-        king_moves = ["e1", "f1", "g1"]
-        king_moves.each do |move|
-          index = get_rank_and_file(move)
-          if safe_location?(index, king_color) == false
-            return false
-            break
-          end
-        end
-        return true
-      end
+  def possible_moves?(gamepiece)
+    index = get_rank_and_file(gamepiece.location)
+    if gamepiece_moves(gamepiece, index).empty?
+      return false
     else
-      if castle_type == "queenside"
-        king_moves = ["e8", "d8", "c8"]
-        king_moves.each do |move|
-          index = get_rank_and_file(move)
-          if safe_location?(index, king_color) == false
-            return false
-            break
-          end
-        end
-        return true
-      else
-        king_moves = ["e8", "f8", "g8"]
-        king_moves.each do |move|
-          index = get_rank_and_file(move)
-          if safe_location?(index, king_color) == false
-            return false
-            break
-          end
-        end
-        return true
-      end
+      return true
+    end
+  end
+
+  # The object of the game is to checkmate the opponent; this occurs when the opponent's king is in check,
+  # and there is no legal way to remove it from attack.
+  # It is never legal for a player to make a move that puts or leaves the player's own king in check. 
+  def check?(gamepiece)
+    enemy_color = gamepiece.color == "white" ? "black" : "white"
+    enemy_king = @gamepieces[enemy_color]["king"][0]
+    gamepiece_index = get_rank_and_file(gamepiece.location)
+    enemy_king_index = get_rank_and_file(enemy_king.location)
+    next_moves = gamepiece_moves(gamepiece, gamepiece_index)
+
+    if next_moves.include?(enemy_king_index)
+      return true
+    else
+      return false
     end
   end
 
   private
 
   def enemy_spot?(color, move)
-    enemy_color = color == "white" ? "black" : "white"
     new_spot = @board[move[0]][move[1]]
     
     if new_spot.instance_of?(String)
       return false
-    elsif new_spot.color == enemy_color
+    elsif new_spot.color == color
+      return false
+    else
       return true
     end
 
@@ -472,6 +394,16 @@ class Board
     file = find_file(coordinates[0])
     rank = find_rank(coordinates[1])
     @board[rank][file] = element
+  end
+
+  def validate_knight_move(knight, index, move)
+    if @board[move[0]][move[1]] == "-"
+      return true
+    elsif knight.color == @board[move[0]][move[1]].color
+      return false
+    else
+      return true
+    end
   end
 
   def validate_bishop_move(bishop, index, move)
@@ -806,6 +738,101 @@ class Board
     else
       return false
     end
+  end
+
+#Once in every game, each king can make a special move, known as castling. Castling consists of moving the king two squares along the first rank toward a rook on the player's first rank, and then placing the rook on the last square that the king crossed. Castling is permissible if the following conditions are met:[1]
+  #Neither the king nor the rook has previously moved during the game.
+  #There are no pieces between the king and the rook.
+  #The king is not in check, and will not pass through or land on any square attacked by an enemy piece. (Note that castling is permitted if the rook is under attack, or if the rook crosses an attacked square.)
+  def castling?(king, rook)
+    if king.color == "white"
+      return false if king.location != "e1"
+      king_index = get_rank_and_file(king.location)
+      if rook.location == "a1"
+        return false if simulate_west_movement(0, 4, king_index, king) == false
+        return false if safe_castle?("queenside", king.color) == false
+        return true if safe_castle?("queenside", king.color)
+      elsif rook.location == "h1"
+        return false if simulate_east_movement(0, 3, king_index, king) == false
+        return false if safe_castle?("kingside", king.color) == false
+        return true if safe_castle?("kingside", king.color)
+      else
+        return false
+      end
+    elsif king.color == "black"
+      return false if king.location != "e8"
+      king_index = get_rank_and_file(king.location)
+      if rook.location == "a8"
+        return false if simulate_west_movement(0, 4, king_index, king) == false
+        return false if safe_castle?("queenside", king.color) == false
+        return true if safe_castle?("queenside", king.color)
+      elsif rook.location == "h8"
+        return false if simulate_east_movement(0, 3, king_index, king) == false
+        return false if safe_castle?("kingside", king.color) == false
+        return true if safe_castle?("kingside", king.color)
+      else
+        return false
+      end
+    else
+      return false
+    end
+  end
+
+  def safe_castle?(castle_type, king_color)
+    if king_color == "white"
+      if castle_type == "queenside"
+        king_moves = ["e1", "d1", "c1"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      else
+        king_moves = ["e1", "f1", "g1"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      end
+    else
+      if castle_type == "queenside"
+        king_moves = ["e8", "d8", "c8"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      else
+        king_moves = ["e8", "f8", "g8"]
+        king_moves.each do |move|
+          index = get_rank_and_file(move)
+          if safe_location?(index, king_color) == false
+            return false
+            break
+          end
+        end
+        return true
+      end
+    end
+  end
+
+  def execute_castling(king, rook, new_king_spot, new_rook_spot)
+    change_board(king.location, "-")
+    change_board(new_king_spot, king)
+    change_board(rook.location, "-")
+    change_board(new_rook_spot, rook)
+    king.change_location(new_king_spot)
+    rook.change_location(new_rook_spot)
   end
 
 end

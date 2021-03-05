@@ -35,16 +35,19 @@ class Game
   #should ask for which gamepiece the player wants to place the chesspiece (done)
   #should validate that is correct.
     #check if move can be made from all possible gamepiece moves. (done)
-    #check if move puts the gamepiece on a ally gamepiece (should not be able to do that)
-    #check if move takes an enemies gamepiece (place, and remove enemies gamepiece from game.)
+    #check if move puts the gamepiece on a ally gamepiece (should not be able to do that) (done)
+    #check if move takes an enemies gamepiece (place, and remove enemies gamepiece from game.) (done)
+    #check if move places ally king in check (cannot make that move)
   #make the change, move the gamepiece
     #remove gamepiece if necessary
     #old spot becomes blank
+    #check if move places enemy king in check
   def take_turn(player)
     gamepiece = turn_start(player)
     index = @board.get_rank_and_file(gamepiece.location)
     move = turn_move(gamepiece, index)
     execute_move(gamepiece, move)
+    puts "Check" if @board.check?(gamepiece)
   end
 
   def turn_start(player)
@@ -69,7 +72,8 @@ class Game
       puts "Where do you want your #{gamepiece.icon} to go?"
       new_location = gets.chomp
 
-      return new_location if @board.valid_move?(gamepiece, index, new_location)
+      return new_location if @board.valid_move?(gamepiece, index, new_location) 
+       
     end
   end
 
