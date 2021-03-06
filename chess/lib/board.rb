@@ -68,15 +68,16 @@ class Board
       end
 
       #adding castling moves to king's possible moves
-      #if gamepiece.game_moves.length == 1
-        #if gamepiece.color == "white" 
-          #king_moves << [8,3]
-          #king_moves << [8,7]
-        #else 
-          #king_moves << [1,3]
-          #king_moves << [1,7]
-        #end
-      #end
+      if gamepiece.game_moves.length == 1
+        king_index = get_rank_and_file(gamepiece.location)
+        if gamepiece.color == "white" 
+          king_moves << [8,3] unless simulate_west_movement(0, 4, king_index, gamepiece) == false || safe_castle?("queenside", gamepiece.color) == false
+          king_moves << [8,7] unless simulate_east_movement(0, 3, king_index, gamepiece) == false || safe_castle?("kingside", gamepiece.color) == false
+        else 
+          king_moves << [1,3] unless simulate_west_movement(0, 4, king_index, gamepiece) == false || safe_castle?("queenside", gamepiece.color) == false
+          king_moves << [1,7] unless simulate_east_movement(0, 3, king_index, gamepiece) == false || safe_castle?("kingside", gamepiece.color) == false
+        end
+      end
       
       return king_moves
     end
@@ -111,7 +112,9 @@ class Board
       end
 
       if en_passant?(gamepiece) != false
-        enemy_index = get_rank_and_file(en_passant?(gamepiece))
+        enemy = en_passant?(gamepiece)
+
+        enemy_index = get_rank_and_file(enemy.location)
         if gamepiece.color == "white"
           passing_move = [enemy_index[0] - 1, enemy_index[1]]
           pawn_moves << passing_move
@@ -170,57 +173,46 @@ class Board
 
     if gamepiece.name == "P" && en_passant?(gamepiece) != false
       dead_gamepiece = en_passant?(gamepiece)
-      remove_gamepiece(gamepiece, dead_gamepiece)
-      change_board(dead_gamepiece, "-")
+      old_location = dead_gamepiece.location
+      remove_gamepiece(gamepiece, dead_gamepiece.location)
+      change_board(old_location, "-")
     end
 
     # Implement the castling movement
     if gamepiece.name == "K" 
       if gamepiece.color == "white"
         if new_location == "c1"
-          rook = find_gamepiece("a1")
-          if castling?(gamepiece, rook)
-            execute_castling(gamepiece, rook, "c1", "d1")
-          end
+          rook = @gamepieces[gamepiece.color]["rook"][0]
+          execute_castling(gamepiece, rook, "c1", "d1")
         end
 
         if new_location == "g1"
-          other_rook = find_gamepiece("h1")
-          if castling?(gamepiece, other_rook)
-            execute_castling(gamepiece, other_rook, "g1", "f1")
-          end
+          other_rook = @gamepieces[gamepiece.color]["rook"][1]
+          execute_castling(gamepiece, other_rook, "g1", "f1")
         end
       end
 
       if gamepiece.color == "black"
         if new_location == "c8"
-          rook = find_gamepiece("a8")
-          if castling?(gamepiece, rook)
-            execute_castling(gamepiece, rook, "c8", "d8")
-          end
+          rook = @gamepieces[gamepiece.color]["rook"][0]
+          execute_castling(gamepiece, rook, "c8", "d8")
         end
 
         if new_location == "g8"
-          other_rook = find_gamepiece("h8")
-          if castling?(gamepiece, other_rook)
-            execute_castling(gamepiece, other_rook, "g8", "f8")
-          end
+          other_rook = @gamepieces[gamepiece.color]["rook"][1]
+          execute_castling(gamepiece, other_rook, "g8", "f8")
         end
 
       end
     end
-
     change_board(old_location, "-")
     change_board(new_location, gamepiece)
     gamepiece.change_location(new_location)
-    display_board
   end
 
   def remove_gamepiece(gamepiece, move)
     dead_gamepiece = find_gamepiece(move)
     dead_gamepiece.change_location("dead")
-    
-    display_board
   end
 
   #Takes in the gamepiece that is being moved, and the current location of the gamepiece as an index, 
@@ -242,7 +234,12 @@ class Board
     return false if possible_moves.empty?
 
     new_spot = get_rank_and_file(new_location)
-    
+
+    if simulate_new_board(gamepiece, new_location) == false
+      puts "That move puts your King in check."
+      return false
+    end
+
     if !possible_moves.include?(new_spot)
       puts "That move is impossible for #{gamepiece.icon}."
       return false
@@ -258,8 +255,10 @@ class Board
 
   def simulate_new_board(gamepiece, move)
     old_location = gamepiece.location
+
     move_gamepiece(gamepiece.location, move, gamepiece)
     ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
+
     if safe_location?(ally_king_location, gamepiece.color) == false
       move_gamepiece(move, old_location, gamepiece)
       return false
@@ -278,7 +277,7 @@ class Board
         all_moves = gamepiece_moves(piece, index)
         all_moves.each do |move|
           chess_move = index_to_rank(move)
-          possible_moves << move if valid_move?(piece, index, chess_move)
+          possible_moves << move
         end
       end
     end
@@ -717,26 +716,41 @@ class Board
     current_location = get_rank_and_file(capturing_pawn.location)
     first_location = get_rank_and_file(capturing_pawn.game_moves[0])
     #The captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move);
+    #The capturing pawn must be on its fifth rank
     if (current_location[0] - first_location[0]).abs == 3
       left_spot = @board[current_location[0]][current_location[1] - 1]
       right_spot = @board[current_location[0]][current_location[1] + 1]
-      if !left_spot.instance_of?(String) && left_spot.name == "P"
-        if left_spot.game_moves.length == 2
-          return left_spot.location 
-        else
-          return false
-        end
-      elsif !right_spot.instance_of?(String) && right_spot.name == "P"
-        if right_spot.game_moves.length == 2
-          return right_spot.location
-        else
-          return false
-        end
-      else
-        false
+
+      if left_spot == nil
+        return adjacent_pawn?(right_spot)
       end
+
+      if right_spot == nil
+        return adjacent_pawn?(left_spot)
+      end
+      
+      if adjacent_pawn?(left_spot) != false
+        return adjacent_pawn?(left_spot)
+      elsif adjacent_pawn?(right_spot) != false
+        return adjacent_pawn?(right_spot)
+      else
+        return false
+      end
+
     else
       return false
+    end
+  end
+
+  def adjacent_pawn?(spot)
+    if spot == nil
+      return false
+    elsif spot.instance_of?(String)
+      return false
+    elsif spot.name != "P"
+      return false
+    else
+      return spot
     end
   end
 
@@ -744,15 +758,15 @@ class Board
   #Neither the king nor the rook has previously moved during the game.
   #There are no pieces between the king and the rook.
   #The king is not in check, and will not pass through or land on any square attacked by an enemy piece. (Note that castling is permitted if the rook is under attack, or if the rook crosses an attacked square.)
-  def castling?(king, rook)
+  def castling?(king)
     if king.color == "white"
-      return false if king.location != "e1"
+      return false if king.game_moves.length != 1
       king_index = get_rank_and_file(king.location)
-      if rook.location == "a1"
+      if @gamepieces[king.color]["rook"][0].location == "a1"
         return false if simulate_west_movement(0, 4, king_index, king) == false
         return false if safe_castle?("queenside", king.color) == false
         return true if safe_castle?("queenside", king.color)
-      elsif rook.location == "h1"
+      elsif @gamepieces[king.color]["rook"][1].location == "h1"
         return false if simulate_east_movement(0, 3, king_index, king) == false
         return false if safe_castle?("kingside", king.color) == false
         return true if safe_castle?("kingside", king.color)
@@ -760,13 +774,13 @@ class Board
         return false
       end
     elsif king.color == "black"
-      return false if king.location != "e8"
+      return false if king.game_moves != 1
       king_index = get_rank_and_file(king.location)
-      if rook.location == "a8"
+      if @gamepieces[king.color]["rook"][0].location == "a8"
         return false if simulate_west_movement(0, 4, king_index, king) == false
         return false if safe_castle?("queenside", king.color) == false
         return true if safe_castle?("queenside", king.color)
-      elsif rook.location == "h8"
+      elsif @gamepieces[king.color]["rook"][1].location == "h8"
         return false if simulate_east_movement(0, 3, king_index, king) == false
         return false if safe_castle?("kingside", king.color) == false
         return true if safe_castle?("kingside", king.color)

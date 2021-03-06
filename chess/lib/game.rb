@@ -43,16 +43,22 @@ class Game
     #old spot becomes blank
     #check if move places enemy king in check
   def take_turn(player)
-    gamepiece = turn_start(player)
-    index = @board.get_rank_and_file(gamepiece.location)
-    move = turn_move(gamepiece, index)
-    execute_move(gamepiece, move)
-    puts "Check" if @board.check?(gamepiece)
+    puts "#{player.name}, it is your turn."
+    loop do
+      gamepiece = turn_start(player)
+      index = @board.get_rank_and_file(gamepiece.location)
+      move = turn_move(gamepiece, index)
+      redo if move == false
+
+      execute_move(gamepiece, move)
+      puts "Check" if @board.check?(gamepiece)
+      @board.display_board
+      break
+    end
   end
 
   def turn_start(player)
     loop do
-      puts "#{player.name}, it is your turn."
       puts "Choose the piece you want to move by typing the location of the piece. ex: a1"
       location = gets.chomp
       gamepiece = @board.find_gamepiece(location)
@@ -70,10 +76,12 @@ class Game
   def turn_move(gamepiece, index)
     loop do
       puts "Where do you want your #{gamepiece.icon} to go?"
+      puts "Type 'reselect' if you want to choose a different gamepiece to move."
       new_location = gets.chomp
+      
+      return false if new_location == "reselect"
 
       return new_location if @board.valid_move?(gamepiece, index, new_location) 
-       
     end
   end
 
