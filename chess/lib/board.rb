@@ -171,7 +171,11 @@ class Board
   def move_gamepiece(old_location, new_location, gamepiece)
     new_spot = get_rank_and_file(new_location)
 
-    if gamepiece.name == "P" && en_passant?(gamepiece) != false
+    old_location_index = get_rank_and_file(old_location)
+    row = new_spot[0] - old_location_index[0]
+    col = new_spot[1] - old_location_index[1]
+    # add that new location has to be diagonal to the P's.
+    if ([row, col] == [1,1] || [row, col] == [-1,-1] || [row, col] == [-1, 1] || [row, col] == [1, -1]) && en_passant?(gamepiece) != false
       dead_gamepiece = en_passant?(gamepiece)
       old_spot = dead_gamepiece.location
       remove_gamepiece(gamepiece, dead_gamepiece.location)
@@ -235,8 +239,16 @@ class Board
 
     new_spot = get_rank_and_file(new_location)
 
+    if simulate_next_move(gamepiece, new_location) == false
+      puts "That move puts your king in check."
+      return false
+    end
+
     if !possible_moves.include?(new_spot)
       puts "That move is impossible for #{gamepiece.icon}."
+      return false
+    elsif simulate_next_move(gamepiece, new_location) == false
+      puts "That move puts your king in check."
       return false
     elsif @board[new_spot[0]][new_spot[1]] == "-" && possible_moves.include?(new_spot)
       return true
@@ -358,7 +370,6 @@ class Board
     if gamepiece.name == "P" && en_passant?(gamepiece) != false
       enemy_gamepiece = en_passant?(gamepiece)
       old_enemy_location = enemy_gamepiece.location
-      remove_gamepiece(enemy_gamepiece, old_enemy_location)
 
       move_gamepiece(gamepiece.location, new_location, gamepiece)
       ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
@@ -368,8 +379,9 @@ class Board
       end
 
       if safe_location?(ally_king_location, gamepiece.color) == false
-        move_gamepiece(new_location, old_location, gamepiece)
         enemy_gamepiece.change_location(old_enemy_location)
+        move_gamepiece(new_location, old_location, gamepiece)
+        
         
         if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
           enemy_gamepiece.game_moves.pop
@@ -486,7 +498,7 @@ class Board
 
   end
 
-  private
+  #private
 
   def enemy_spot?(color, move)
     new_spot = @board[move[0]][move[1]]
@@ -625,6 +637,8 @@ class Board
       row = move[0] - index[0]
       col = move[1] - index[1]
       if [row, col] == [1, 0] || [row, col] == [-1, 0]
+        return false
+      elsif [row, col] == [2,0] || [row, col] == [-2, 0]
         return false
       end
     end

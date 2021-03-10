@@ -64,7 +64,7 @@ class Game
       end
 
       puts "Check" if @board.check?(gamepiece)
-      @board.display_board
+      return @board.display_board
     end
   end
 
