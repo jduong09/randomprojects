@@ -173,9 +173,9 @@ class Board
 
     if gamepiece.name == "P" && en_passant?(gamepiece) != false
       dead_gamepiece = en_passant?(gamepiece)
-      old_location = dead_gamepiece.location
+      old_spot = dead_gamepiece.location
       remove_gamepiece(gamepiece, dead_gamepiece.location)
-      change_board(old_location, "-")
+      change_board(old_spot, "-")
     end
 
     # Implement the castling movement
@@ -235,11 +235,6 @@ class Board
 
     new_spot = get_rank_and_file(new_location)
 
-    if simulate_new_board(gamepiece, new_location) == false
-      puts "That move puts your King in check."
-      return false
-    end
-
     if !possible_moves.include?(new_spot)
       puts "That move is impossible for #{gamepiece.icon}."
       return false
@@ -251,21 +246,6 @@ class Board
       return true
     end
 
-  end
-
-  def simulate_new_board(gamepiece, move)
-    old_location = gamepiece.location
-
-    move_gamepiece(gamepiece.location, move, gamepiece)
-    ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
-
-    if safe_location?(ally_king_location, gamepiece.color) == false
-      move_gamepiece(move, old_location, gamepiece)
-      return false
-    else
-      move_gamepiece(move, old_location, gamepiece)
-      return true
-    end
   end
 
   def enemy_moves(enemy_color)
@@ -323,6 +303,189 @@ class Board
     end
   end
 
+  # When a player is in check, and he cannot make a move such that after the move, the king is not in check, then he is mated. 
+  # Note that there are three different possible ways to remove a check:
+    # Move the king away to a square where he is not in check.
+    # Take the piece that gives the check.
+    # (In case of a check, given by a rook, bishop or queen: ) move a piece between the checking piece and the king.
+
+  #def checkmate?
+
+  #end
+
+  # Pawns that reach the last row of the board promote. 
+  # When a player moves a pawn to the last row of the board, he replaces the pawn by a queen, rook, knight, or bishop (of the same color). 
+  # Usually, players will promote the pawn to a queen, but the other types of pieces are also allowed. 
+  # (It is not required that the pawn is promoted to a piece taken. 
+  # Thus, it is for instance possible that a player has at a certain moment two queens.)
+
+  def promote_pawn?(pawn)
+    first_location_index = get_rank_and_file(pawn.game_moves[0])
+    current_location_index = get_rank_and_file(pawn.location)
+    if (current_location_index[0] - first_location_index[0]).abs == 6
+      return true
+    else
+      return false
+    end
+  end
+
+  def promote(pawn, new_gamepiece)
+    location = pawn.location
+
+    if new_gamepiece == "Q"
+      new_queen = Queen.new(pawn.color, pawn.location)
+      remove_gamepiece(pawn, pawn.location)
+      change_board(location, new_queen)
+    elsif new_gamepiece == "B"
+      new_bishop = Bishop.new(pawn.color, pawn.location)
+      remove_gamepiece(pawn, pawn.location)
+      change_board(location, new_bishop)
+    elsif new_gamepiece == "R"
+      new_rook = Rook.new(pawn.color, pawn.location)
+      remove_gamepiece(pawn, pawn.location)
+      change_board(location, new_rook)
+    else # new_gamepiece == "N"
+      new_knight = Knight.new(pawn.color, pawn.location)
+      remove_gamepiece(pawn.color, pawn.location)
+      change_board(location, new_knight)
+    end
+  end
+
+  def simulate_next_move(gamepiece, new_location)
+    old_location = gamepiece.location
+    new_location_index = get_rank_and_file(new_location)
+
+    if gamepiece.name == "P" && en_passant?(gamepiece) != false
+      enemy_gamepiece = en_passant?(gamepiece)
+      old_enemy_location = enemy_gamepiece.location
+      remove_gamepiece(enemy_gamepiece, old_enemy_location)
+
+      move_gamepiece(gamepiece.location, new_location, gamepiece)
+      ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
+
+      if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+        gamepiece.game_moves.pop
+      end
+
+      if safe_location?(ally_king_location, gamepiece.color) == false
+        move_gamepiece(new_location, old_location, gamepiece)
+        enemy_gamepiece.change_location(old_enemy_location)
+        
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        change_board(old_enemy_location, enemy_gamepiece)
+
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+          gamepiece.game_moves.pop
+        end
+
+        return false
+      else
+        move_gamepiece(new_location, old_location, gamepiece)
+        enemy_gamepiece.change_location(old_enemy_location)
+
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        change_board(old_enemy_location, enemy_gamepiece)
+          
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+          gamepiece.game_moves.pop
+        end
+
+        return true
+      end
+    end
+
+    if enemy_spot?(gamepiece.color, new_location_index)
+      enemy_gamepiece = find_gamepiece(new_location)
+      old_enemy_location = enemy_gamepiece.location
+      remove_gamepiece(enemy_gamepiece, new_location)
+
+      move_gamepiece(gamepiece.location, new_location, gamepiece)
+      ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
+
+      if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+        gamepiece.game_moves.pop
+      end
+
+      if safe_location?(ally_king_location, gamepiece.color) == false
+        move_gamepiece(new_location, old_location, gamepiece)
+        enemy_gamepiece.change_location(old_enemy_location)
+        
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        change_board(new_location, enemy_gamepiece)
+
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+          gamepiece.game_moves.pop
+        end
+
+        return false
+      else
+        move_gamepiece(new_location, old_location, gamepiece)
+        enemy_gamepiece.change_location(old_enemy_location)
+
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        change_board(new_location, enemy_gamepiece)
+          
+        if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
+          enemy_gamepiece.game_moves.pop
+        end
+
+        if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+          gamepiece.game_moves.pop
+        end
+
+        return true
+      end
+
+    end
+
+    move_gamepiece(gamepiece.location, new_location, gamepiece)
+    ally_king_location = get_rank_and_file(@gamepieces[gamepiece.color]["king"][0].location)
+
+    if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+      gamepiece.game_moves.pop
+    end
+
+    #if gamepiece just goes to a "-" location
+    if safe_location?(ally_king_location, gamepiece.color) == false
+      move_gamepiece(new_location, old_location, gamepiece)
+      if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+        gamepiece.game_moves.pop
+      end
+      return false
+    else
+      move_gamepiece(new_location, old_location, gamepiece)
+      if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
+        gamepiece.game_moves.pop
+      end
+      return true
+    end
+
+  end
+
   private
 
   def enemy_spot?(color, move)
@@ -376,7 +539,7 @@ class Board
       "rook" => [Rook.new("white", "a1"), Rook.new("white", "h1")],
       "bishop" => [Bishop.new("white", "c1"), Bishop.new("white", "f1")],
       "king" => [King.new("white")],
-      "queen" => [Queen.new("white")]
+      "queen" => [Queen.new("white", "d1")]
      }
 
      @gamepieces["black"] = {
@@ -385,7 +548,7 @@ class Board
       "rook" => [Rook.new("black", "a8"), Rook.new("black", "h8")],
       "bishop" => [Bishop.new("black", "c8"), Bishop.new("black", "f8")],
       "king" => [King.new("black")],
-      "queen" => [Queen.new("black")]
+      "queen" => [Queen.new("black", "d8")]
      }
   end
  
@@ -717,22 +880,38 @@ class Board
     first_location = get_rank_and_file(capturing_pawn.game_moves[0])
     #The captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move);
     #The capturing pawn must be on its fifth rank
-    if (current_location[0] - first_location[0]).abs == 3
+    if (current_location[0] - first_location[0]).abs == 3 
       left_spot = @board[current_location[0]][current_location[1] - 1]
       right_spot = @board[current_location[0]][current_location[1] + 1]
 
-      if left_spot == nil
-        return adjacent_pawn?(right_spot)
+      if left_spot == nil && adjacent_pawn?(right_spot)
+        if right_spot.game_moves.length == 2
+          return right_spot 
+        else
+          return false
+        end
       end
 
-      if right_spot == nil
-        return adjacent_pawn?(left_spot)
+      if right_spot == nil && adjacent_pawn?(left_spot)
+        if left_spot.game_moves.length == 2
+          return left_spot 
+        else
+          return false
+        end
       end
       
-      if adjacent_pawn?(left_spot) != false
-        return adjacent_pawn?(left_spot)
-      elsif adjacent_pawn?(right_spot) != false
-        return adjacent_pawn?(right_spot)
+      if adjacent_pawn?(left_spot)
+        if left_spot.game_moves.length == 2
+          return left_spot
+        else
+          return false
+        end
+      elsif adjacent_pawn?(right_spot)
+        if right_spot.game_moves.length == 2
+          return right_spot 
+        else
+          return false
+        end
       else
         return false
       end
@@ -743,14 +922,11 @@ class Board
   end
 
   def adjacent_pawn?(spot)
-    if spot == nil
-      return false
-    elsif spot.instance_of?(String)
-      return false
-    elsif spot.name != "P"
-      return false
+    
+    if !spot.instance_of?(String) && spot.name == "P"
+      return true
     else
-      return spot
+      return false
     end
   end
 

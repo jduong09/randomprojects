@@ -1,10 +1,10 @@
 class Queen
   attr_reader :icon, :color, :location, :name
   
-  def initialize(color)
+  def initialize(color, location)
     @name = "Q"
     @color = color
-    @location = @color == "white" ? "d1" : "d8"
+    @location = location
     @icon = @color == "white" ? "\u2655" : "\u265B"
   end
 

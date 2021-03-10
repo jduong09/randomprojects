@@ -51,9 +51,20 @@ class Game
       redo if move == false
 
       execute_move(gamepiece, move)
+      
+      #If pawn has reached last rank, promote to new gamepiece of user's choice.
+      if gamepiece.name == "P" && @board.promote_pawn?(gamepiece)
+        location = gamepiece.location
+        puts "Your pawn has reached promotion rank. Type the gamepiece you want to promote your pawn to. ex: 'Q'"
+        new_piece = gets.chomp
+        @board.promote(gamepiece, new_piece)
+        new_gamepiece = @board.find_gamepiece(location)
+        puts "Check" if @board.check?(new_gamepiece)
+        return @board.display_board
+      end
+
       puts "Check" if @board.check?(gamepiece)
       @board.display_board
-      break
     end
   end
 
@@ -124,6 +135,3 @@ class Game
   end
 
 end
-
-game = Game.new
-game.game_loop
