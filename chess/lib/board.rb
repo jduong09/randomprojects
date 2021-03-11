@@ -321,9 +321,52 @@ class Board
     # Take the piece that gives the check.
     # (In case of a check, given by a rook, bishop or queen: ) move a piece between the checking piece and the king.
 
-  #def checkmate?
+  #Implementation
+    #Take a look at your moves. If enemy king is in these moves, he is in check. (done)
+      #If the king's next moves still can be attacked by the enemies, he cannot move. (he is in checkmate)
+      #If you cannot take out the pieces that gives check, he is still in checkmate.
+      #If you cannot put a piece between the checking piece and the king, he is in checkmate.
+  def checkmate?(gamepiece)
+    if check?(gamepiece)
+      enemy_color = gamepiece.color == "white" ? "black" : "white"
+      enemy_king = @gamepieces[enemy_color]["king"][0]
+      enemy_king_index = get_rank_and_file(enemy_king.location)
+      enemy_king_moves = gamepiece_moves(enemy_king, enemy_king_index)
+      gamepiece_index = get_rank_and_file(gamepiece.location)
+      
+      if enemy_king_moves.empty? #If the king has no moves, he cannot move, is still in check.
+        #Must have a enemy move that can take out the piece that gives check,
+        enemy_moves = enemy_moves(enemy_color)
+        if enemy_moves.include?(gamepiece_index)
+          return false
+        end
 
-  #end
+        #Or cannot put a piece between the checking piece and the king, he is in checkmate. Only cases if the gamepiece is a Bishop, Queen or Rook
+        if gamepiece.name == "B" || gamepiece.name == "Q" || gamepiece.name == "R"
+          gamepiece_next_moves = gamepiece_moves(gamepiece, gamepiece_index)
+          gamepiece_next_moves.each do |move|
+            if enemy_moves.include?(move)
+              return false
+            end
+          end
+        end
+      else
+      
+        enemy_king_moves.each do |move|
+          if safe_location?(move, enemy_color)
+            return false
+          end
+        end
+
+      end
+      #No way to get enemy king out of check.
+      #Return true, enemy king is in checkmate.
+      return true
+      
+    else
+      return false
+    end
+  end
 
   # Pawns that reach the last row of the board promote. 
   # When a player moves a pawn to the last row of the board, he replaces the pawn by a queen, rook, knight, or bishop (of the same color). 
@@ -380,7 +423,9 @@ class Board
 
       if safe_location?(ally_king_location, gamepiece.color) == false
         enemy_gamepiece.change_location(old_enemy_location)
-        move_gamepiece(new_location, old_location, gamepiece)
+        change_board(old_location, gamepiece)
+        change_board(new_location, "-")
+        gamepiece.change_location(old_location)
         
         
         if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
@@ -399,8 +444,10 @@ class Board
 
         return false
       else
-        move_gamepiece(new_location, old_location, gamepiece)
         enemy_gamepiece.change_location(old_enemy_location)
+        change_board(old_location, gamepiece)
+        change_board(new_location, "-")
+        gamepiece.change_location(old_location)
 
         if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
           enemy_gamepiece.game_moves.pop
@@ -433,8 +480,10 @@ class Board
       end
 
       if safe_location?(ally_king_location, gamepiece.color) == false
-        move_gamepiece(new_location, old_location, gamepiece)
         enemy_gamepiece.change_location(old_enemy_location)
+        change_board(old_location, gamepiece)
+        change_board(new_location, "-")
+        gamepiece.change_location(old_location)
         
         if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
           enemy_gamepiece.game_moves.pop
@@ -452,8 +501,10 @@ class Board
 
         return false
       else
-        move_gamepiece(new_location, old_location, gamepiece)
         enemy_gamepiece.change_location(old_enemy_location)
+        change_board(old_location, gamepiece)
+        change_board(new_location, "-")
+        gamepiece.change_location(old_location)
 
         if enemy_gamepiece.name == "P" || enemy_gamepiece.name == "R" || enemy_gamepiece.name == "K"
           enemy_gamepiece.game_moves.pop
@@ -483,13 +534,17 @@ class Board
 
     #if gamepiece just goes to a "-" location
     if safe_location?(ally_king_location, gamepiece.color) == false
-      move_gamepiece(new_location, old_location, gamepiece)
+      change_board(old_location, gamepiece)
+      change_board(new_location, "-")
+      gamepiece.change_location(old_location)
       if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
         gamepiece.game_moves.pop
       end
       return false
     else
-      move_gamepiece(new_location, old_location, gamepiece)
+      change_board(old_location, gamepiece)
+      change_board(new_location, "-")
+      gamepiece.change_location(old_location)
       if gamepiece.name == "P" || gamepiece.name == "R" || gamepiece.name == "K"
         gamepiece.game_moves.pop
       end

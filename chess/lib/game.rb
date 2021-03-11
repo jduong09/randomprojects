@@ -63,7 +63,15 @@ class Game
         return @board.display_board
       end
 
-      puts "Check" if @board.check?(gamepiece)
+      if @board.check?(gamepiece)
+        puts "Check"
+
+        if board.checkmate?(gamepiece)
+          puts "Checkmate. Game Over!"
+          break
+        end
+      end
+
       return @board.display_board
     end
   end
