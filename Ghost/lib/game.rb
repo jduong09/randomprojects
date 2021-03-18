@@ -39,33 +39,20 @@ class Game
   def take_turn(player)
     puts "#{player.name}, it's your turn."
     puts "The fragment is '#{@fragment}'"
-    puts "Type (1) to choose a letter to add to the fragment. Type (2) to challenge the current fragment as a word."
-    choice = gets.chomp
+    puts "Choose a letter to add to the fragment."
+    letter = player.guess
+    
+    @fragment += letter if valid_play?(letter)
 
-    if choice == "1"
-      letter = player.guess
-      @fragment += letter if valid_play?(letter)
-
-      if valid_play?(letter) == false
-        puts "Not a valid letter, you lose."
-        @losses[player] += 1
-        round_over
-      end
+    if valid_play?(letter) == false
+      player.alert_invalid_guess
+      @losses[player.name] += 1
     end
 
-    if choice == "2"
-      #if challenger is right, previous player loses round.
-      if is_a_word?(@fragment)
-        #previous_player loses
-        prev_player = previous_player
-        @losses[prev_player] += 1
-        round_over
-      else
-        #if challenger is wrong, challenger loses round.
-        @losses[player] += 1
-        round_over
-      end
+    if is_a_word?(@fragment)
+      @losses[player.name] += 1
     end
+
   end
 
   def current_player
@@ -78,7 +65,7 @@ class Game
     (@players.length - 1).downto(0).each do |idx|
       player = @players[idx]
 
-      return player if @losses[player] < MAX_NUM_OF_LOSSES
+      return player if @losses[player.name] < MAX_NUM_OF_LOSSES
     end
   end
 
@@ -86,11 +73,11 @@ class Game
     @players.rotate!
     #next_player! should rotate the array in order to move the next player to the first, and then current_player will take the first player.
     #However, it needs to check that the front has someone with lives.
-    @players.rotate! until @losses[current_player] < MAX_NUM_OF_LOSSES
+    @players.rotate! until @losses[current_player.name] < MAX_NUM_OF_LOSSES
   end
 
   def round_over
-    puts "Round over."
+    return "Round over."
   end
 
   # Valid_play checks if the fragment can still make a word in the dictionary set.
@@ -106,11 +93,7 @@ class Game
   end
 
   def is_a_word?(fragment)
-    if @dictionary.include?(fragment)
-      return true
-    else
-      return false
-    end
+    @dictionary.include?(fragment)
   end
 
   def create_player(player_name)
