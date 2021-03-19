@@ -18,7 +18,7 @@ class Game
     game_intro
     play_round until game_over?
 
-    winner
+    puts "#{winner} is the winner!"
   end
 
   def game_intro
@@ -100,8 +100,10 @@ class Game
     
   end
 
-  def winner
-    
+  def winner #returns the winner. This would be the player with less than max num of losses.
+    @losses.each do |k, v|
+      return k if v < MAX_NUM_OF_LOSSES
+    end
   end
 
   # Valid_play checks if the fragment can still make a word in the dictionary set.
