@@ -14,6 +14,13 @@ class Game
     @losses = Hash.new { |losses, player| losses[player] = 0 }
   end
 
+  def run 
+    game_intro
+    play_round until game_over?
+
+    winner
+  end
+
   def game_intro
     puts "Welcome to Ghost, the written or spoken word game."
     puts "Each player will take turns adding letters to a word fragment, trying NOT to be the one to complete a valid word."
@@ -30,27 +37,32 @@ class Game
   end
 
   def play_round
-    loop do
+    @fragment = ""
+
+    until round_over?
       take_turn(current_player)
       next_player!
     end
+
+    update_standings
   end
 
   def take_turn(player)
     puts "#{player.name}, it's your turn."
     puts "The fragment is '#{@fragment}'"
     puts "Choose a letter to add to the fragment."
-    letter = player.guess
+    loop do
+      letter = player.guess
+
+      if valid_play?(letter) == false
+        player.alert_invalid_guess
+      end
     
-    @fragment += letter if valid_play?(letter)
+      if valid_play?(letter)
+        @fragment += letter
+        break
+      end
 
-    if valid_play?(letter) == false
-      player.alert_invalid_guess
-      @losses[player.name] += 1
-    end
-
-    if is_a_word?(@fragment)
-      @losses[player.name] += 1
     end
 
   end
@@ -76,8 +88,20 @@ class Game
     @players.rotate! until @losses[current_player.name] < MAX_NUM_OF_LOSSES
   end
 
-  def round_over
-    return "Round over."
+  def round_over?
+    is_a_word?(@fragment)
+  end
+
+  def game_over?
+    # winner is decided when only one person has less than < 5 losses.
+    players = @losses.select {|k, v| v < MAX_NUM_OF_LOSSES }
+
+    return true if players.length == 1
+    
+  end
+
+  def winner
+    
   end
 
   # Valid_play checks if the fragment can still make a word in the dictionary set.
@@ -98,6 +122,20 @@ class Game
 
   def create_player(player_name)
     @players << Player.new(player_name)
+  end
+
+  def update_standings
+    puts "#{previous_player.name} completed the word #{@fragment}."
+    @losses[previous_player.name] += 1
+    display_standings
+
+    sleep(1)
+  end
+
+  def display_standings
+    @losses.each do |player, losses|
+      puts "#{player} has #{losses} letter."
+    end
   end
 
 end

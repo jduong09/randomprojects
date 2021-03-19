@@ -9,6 +9,6 @@ class Player
   end
 
   def alert_invalid_guess
-    puts "Invalid guess."
+    puts "Invalid guess. Choose a letter that will continue to fragment chain."
   end
 end
