@@ -3,6 +3,7 @@
 # Make your program run as a command line script, taking in the name of a maze file on the command line.
 
 class Maze
+  attr_reader :maze
   #initialize maze class with textfile
   #create instance variable, which will be our maze.
   def initialize(textfile_name)
@@ -37,6 +38,8 @@ class Maze
       # go in each direction
       # add that direction to an array
       # if you run into a "*", break
+      # if you run into an error, you need to go backwards, and check a different path.
+        # how?
   
   # Alternatively:
     # Loop
@@ -51,85 +54,47 @@ class Maze
       # How will we tackle the backtrack to doing other moves when there are no other other available at this spot.
         # Add the moves to an array, if you run into a dead end, change the current_location to the previous one; pop the array. 
 
-  def navigate_maze(current_location)
-    movements = []
+  # Process of pathfinding
+    # Start at point A
+    # Need to get to point B
+      # if point A is [6,1]
+      # point B is [1, 15]
+        # if you subtract the cols and rows, 
+        # you get [-5, 14] which is also in the NE direction.
+          # north is -1 in the row, south is +1 in the row.
+          # east is +1 in the col, west is -1 in the col
+          # you can decide on which direction you want to travel.
+          # it should tell you which direction point B is from point A. 
+            # make a move that is in the positive direction.
 
-    row = current_location[0]
-    col = current_location[1]
+  # Objective: Get to the row of the end point
+    # if you can go in the direction of the end point, go.
+      # elsif you can go towards the end point (east/west), then go there.
+      # else you need to go away from endpoint.
+        # if you can go vertically, go
+        # else if you can go horizontally, go
+  def navigate_maze(start, endpoint)
+    counter = 0
+    queue = []
+    queue << [endpoint[0], endpoint[1]]
+    
+    while !queue.empty?
+      current = queue[0]
 
-    if current_location == "E"
-      return "At the end."
-    end
+      if self[current[0], current[1]] == "S"
+        return queue
+      end
 
-    if go_north(current_location)
-      @maze[row][col] = "x"
-      current_location = [row - 1, col]
-      navigate_maze(current_location)
-      movements << current_location
-    elsif go_south(current_location)
-      @maze[row][col] = "x"
-      current_location = [row + 1, col]
-      navigate_maze(current_location)
-      movements << current_location
-    elsif go_east(current_location)
-      @maze[row][col] = "x"
-      current_location = [row, col + 1]
-      navigate_maze(current_location)
-      movements << current_location
-    elsif go_west(current_location)
-      @maze[row][col] = "x"
-      current_location = [row, col - 1]
-      navigate_maze(current_location)
-      movements << current_location
-    else 
+      counter += 1
+
+      queue << [current[0] - 1, current[1]] unless self[current[0] - 1, current[1]] == "*" || queue.include?([current[0] - 1, current[1]])
+      queue << [current[0] + 1, current[1]] unless self[current[0] + 1, current[1]] == "*" || queue.include?([current[0] + 1, current[1]])
+      queue << [current[0], current[1] - 1] unless self[current[0], current[1] - 1] == "*" || queue.include?([current[0], current[1] - 1])
+      queue << [current[0], current[1] + 1] unless self[current[0], current[1] + 1] == "*" || queue.include?([current[0], current[1] + 1])
       
+      queue.shift
     end
-
-  end
-
-  #takes in current location as coordinates; ex: [0,0]
-  def go_north(coordinates)
-    row = coordinates[0]
-    col = coordinates[1]
-
-    if self[row - 1, col] == " "
-      return true
-    else
-      return false
-    end
-  end
-
-  def go_south(coordinates)
-    row = coordinates[0]
-    col = coordinates[1]
-
-    if self[row + 1, col] == " "
-      return true
-    else
-      return false
-    end
-  end
-
-  def go_east(coordinates)
-    row = coordinates[0]
-    col = coordinates[1]
-
-    if self[row, col + 1] == " "
-      return true
-    else
-      return false
-    end
-  end
-
-  def go_west(coordinates)
-    row = coordinates[0]
-    col = coordinates[1]
-
-    if self[row, col - 1] == " "
-      return true
-    else
-      return false
-    end
+    
   end
 
   def [](row, col)
