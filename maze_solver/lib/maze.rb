@@ -76,25 +76,97 @@ class Maze
   def navigate_maze(start, endpoint)
     counter = 0
     queue = []
-    queue << [endpoint[0], endpoint[1]]
-    
+    queue << [endpoint[0], endpoint[1], counter]
     while !queue.empty?
       current = queue[0]
+      
+      # Want to insert the points that we are adding onto the 2d array
+        # So that I can easily check if there are dupes.
+        # So that I can trace the route at the end separately.
+      # Only add to the queue if the location isn't in the queue, or isn't a wall ("*")
+      
+      if self[current[0] + 1, current[1]] == " "
+        
+        if self[current[0] + 1, current[1]] == "S"
+          break
+        end
 
-      if self[current[0], current[1]] == "S"
-        return queue
+        @maze[current[0] + 1][current[1]] = current[2] + 1
+        queue << [current[0] + 1, current[1], current[2] + 1]
       end
 
-      counter += 1
+      if self[current[0] - 1, current[1]] == " "
 
-      queue << [current[0] - 1, current[1]] unless self[current[0] - 1, current[1]] == "*" || queue.include?([current[0] - 1, current[1]])
-      queue << [current[0] + 1, current[1]] unless self[current[0] + 1, current[1]] == "*" || queue.include?([current[0] + 1, current[1]])
-      queue << [current[0], current[1] - 1] unless self[current[0], current[1] - 1] == "*" || queue.include?([current[0], current[1] - 1])
-      queue << [current[0], current[1] + 1] unless self[current[0], current[1] + 1] == "*" || queue.include?([current[0], current[1] + 1])
-      
+        if self[current[0] + 1, current[1]] == "S"
+          break
+        end
+
+        @maze[current[0] - 1][current[1]] = current[2] + 1
+        queue << [current[0] - 1, current[1], current[2] + 1]      
+      end
+
+      if self[current[0], current[1] + 1] == " "
+
+        if self[current[0] + 1, current[1]] == "S"
+          break
+        end
+
+        @maze[current[0]][current[1] + 1] = current[2] + 1
+        queue << [current[0], current[1] + 1, current[2] + 1]
+
+      end
+
+      if self[current[0], current[1] - 1] == " "
+
+        if self[current[0] + 1, current[1]] == "S"
+          break
+        end
+
+        @maze[current[0]][current[1] - 1] = current[2] + 1
+        queue << [current[0], current[1] - 1, current[2] + 1]
+      end
+
       queue.shift
     end
-    
+  end
+
+  def route(start, endpoint)
+    navigate_maze(start, endpoint)
+    path = ["S"]
+
+    current_location = start
+
+    until self[current_location[0], current_location[1]] == "E"
+      adjacent_locations = []
+
+      adjacent_locations << [current_location[0] - 1, current_location[1]] unless self[current_location[0] - 1, current_location[1]] == "*"
+      adjacent_locations << [current_location[0] + 1, current_location[1]] unless self[current_location[0] + 1, current_location[1]] == "*"
+      adjacent_locations << [current_location[0], current_location[1] - 1] unless self[current_location[0], current_location[1] - 1] == "*"
+      adjacent_locations << [current_location[0], current_location[1] + 1] unless self[current_location[0], current_location[1] + 1] == "*"
+
+      min = adjacent_locations[0]
+      adjacent_locations.each do |location|
+
+        if self[location[0], location[1]] == " "
+          next
+        end
+
+        if self[location[0], location[1]] == "S"
+          next
+        end
+
+        if self[location[0], location[1]].to_i < self[min[0], min[1]].to_i
+          min = location
+        else
+          next
+        end
+      end
+      path << min
+      current_location = min
+    end
+    path.pop
+    path.push("E")
+    return path
   end
 
   def [](row, col)
